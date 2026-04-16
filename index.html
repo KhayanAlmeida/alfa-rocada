@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>Alfa - Controle de Terrenos</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #0a0a0a;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#sidebar {
+  width: 340px;
+  background: linear-gradient(135deg, #0f2a1f 0%, #1a3a2a 100%);
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100vh;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+  z-index: 10;
+  flex-shrink: 0;
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1001;
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  border: none;
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 24px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  transition: all 0.2s ease;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9;
+}
+
+@media (max-width: 768px) {
+  body { flex-direction: column; }
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 85%;
+    max-width: 300px;
+    height: 100vh;
+    transform: translateX(-100%);
+    z-index: 1000;
+    box-shadow: none;
+  }
+  #sidebar.open { transform: translateX(0); box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
+  .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+  .sidebar-overlay { display: block; }
+  .sidebar-overlay.hidden { display: none; }
+  #map { height: 100vh; width: 100%; }
+  .fab-container { bottom: 16px; right: 16px; }
+  .report-modal, .info-modal { width: 90%; right: 5%; left: 5%; bottom: 80px; }
+  #sidebar { padding: 16px; gap: 12px; }
+}
+
+#sidebar::-webkit-scrollbar { width: 6px; }
+#sidebar::-webkit-scrollbar-track { background: #1a3a2a; border-radius: 3px; }
+#sidebar::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 3px; }
+
+#sidebar h2 {
+  margin: 0 0 5px 0;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, #0f2a1f 0%, #1a3a2a 100%);
+  padding-bottom: 8px;
+  z-index: 20;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 0.7rem;
+  color: #b9f6ca;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #2e7d32;
+}
+
+.drop {
+  border: 2px dashed #4caf50;
+  background: rgba(76, 175, 80, 0.05);
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 5px;
+}
+.drop:hover { background: rgba(76, 175, 80, 0.15); border-color: #81c784; transform: translateY(-2px); }
+
+.legend {
+  background: #1e3a2a;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 5px;
+}
+.legend h4 { margin: 0 0 8px 0; font-size: 12px; font-weight: 600; }
+.legend-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 11px; }
+.color-box { width: 28px; height: 16px; border-radius: 4px; }
+.color-box.green { background: #22c55e; border: 1px solid #4ade80; }
+.color-box.yellow { background: #eab308; border: 1px solid #facc15; }
+.color-box.red { background: #ef4444; border: 1px solid #f87171; }
+.color-box.gray { background: #6b7280; border: 1px solid #9ca3af; }
+
+.stats-card {
+  background: #1e3a2a;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 5px;
+  display: none;
+}
+.stats-card.show { display: block; }
+.stats-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #81c784; border-bottom: 1px solid #2e7d32; padding-bottom: 4px; }
+.stats-list { max-height: 180px; overflow-y: auto; padding-right: 4px; }
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 6px 0;
+  font-size: 11px;
+  padding: 5px 8px;
+  background: #2a4a3a;
+  border-radius: 6px;
+  transition: all 0.1s;
+  cursor: pointer;
+}
+.stat-item:hover { background: #3a5a4a; transform: translateX(2px); }
+.stat-label { color: #ddd; font-weight: 500; font-size: 11px; word-break: break-word; flex: 1; }
+.stat-value { font-weight: 700; font-size: 11px; margin-left: 8px; }
+.stat-value.green { color: #4ade80; }
+.stat-value.yellow { color: #facc15; }
+.stat-value.red { color: #f87171; }
+.stat-value.gray { color: #9ca3af; }
+
+.file-info { font-size: 9px; color: #81c784; margin-top: 3px; padding-left: 6px; }
+.separator { height: 1px; background: linear-gradient(90deg, transparent, #2e7d32, transparent); margin: 8px 0; }
+
+.report-modal, .info-modal {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 420px;
+  max-height: 70vh;
+  background: #1e3a2a;
+  border-radius: 14px;
+  border-left: 4px solid #4caf50;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.25s ease-out;
+}
+.info-modal { border-left-color: #3b82f6; }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.report-modal.show, .info-modal.show { display: flex; }
+.report-header, .info-header {
+  background: #0f2a1f;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #2e7d32;
+}
+.info-header { border-bottom-color: #3b82f6; }
+.report-header h3, .info-header h3 { font-size: 14px; font-weight: 700; color: #81c784; margin: 0; }
+.info-header h3 { color: #60a5fa; }
+.close-report, .close-info { background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer; padding: 0 6px; transition: color 0.2s; }
+.close-report:hover, .close-info:hover { color: #ff4444; }
+.report-content, .info-content { padding: 16px; overflow-y: auto; max-height: 55vh; }
+.report-item, .info-item {
+  background: #2a4a3a;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-left: 3px solid #4caf50;
+}
+.info-item { border-left-color: #3b82f6; background: #2a3a4a; }
+.report-item .date { font-size: 12px; color: #81c784; font-weight: 600; margin-bottom: 6px; }
+.report-item .obs { font-size: 11px; color: #ddd; margin-top: 4px; }
+.report-empty, .info-empty { text-align: center; color: #aaa; padding: 20px; font-size: 12px; }
+.report-footer, .info-footer {
+  padding: 12px 16px;
+  background: #0f2a1f;
+  border-top: 1px solid #2e7d32;
+  font-size: 10px;
+  color: #81c784;
+  text-align: center;
+}
+.info-footer { border-top-color: #3b82f6; }
+.btn-print, .btn-route {
+  background: #2e7d32;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 8px;
+  width: 100%;
+  transition: all 0.2s;
+}
+.btn-route { background: #1e40af; }
+.btn-route:hover { background: #1e3a8a; }
+.btn-print:hover { background: #1b5e20; }
+
+#map { 
+  flex: 1; 
+  height: 100vh; 
+  width: 100%;
+  position: relative; 
+  z-index: 1; 
+  background-color: #1a1a2e;
+}
+
+.fab-container { position: fixed; bottom: 20px; right: 20px; z-index: 1001; }
+.fab-button {
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+  transition: all 0.2s ease;
+  border: none;
+  color: white;
+  font-size: 22px;
+}
+.fab-button:hover { transform: scale(1.08); }
+
+.custom-tooltip {
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 8px;
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  padding: 8px 12px;
+  border-left: 3px solid #4caf50;
+}
+
+.terreno-label {
+  background: transparent;
+  border: none;
+}
+.terreno-label div {
+  background: linear-gradient(135deg, #1a3a2a 0%, #0f2a1f 100%);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 25px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1.5px solid #4caf50;
+  white-space: nowrap;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  text-shadow: 0 0 2px rgba(0,0,0,0.5);
+  text-align: center;
+  line-height: 1.3;
+}
+.terreno-label div small {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.9;
+  display: block;
+  margin-top: 2px;
+}
+.terreno-label div:hover {
+  background: #2e7d32;
+  transform: scale(1.02);
+}
+
+.loading-global {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  background: rgba(0,0,0,0.85);
+  padding: 16px;
+  border-radius: 12px;
+  color: white;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.storage-status {
+  background: rgba(46, 125, 50, 0.2);
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 9px;
+  color: #81c784;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.btn-registro {
+  background: #2e7d32;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  width: 100%;
+  transition: all 0.2s;
+}
+.btn-registro:hover { background: #1b5e20; transform: translateY(-1px); }
+
+.btn-relatorio {
+  background: #1e40af;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  width: 100%;
+  transition: all 0.2s;
+}
+.btn-relatorio:hover { background: #1e3a8a; transform: translateY(-1px); }
+
+.btn-info {
+  background: #7c3aed;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  width: 100%;
+  transition: all 0.2s;
+}
+.btn-info:hover { background: #6d28d9; transform: translateY(-1px); }
+
+.info-marker {
+  font-size: 9px;
+  color: #b9f6ca;
+  margin-top: 3px;
+}
+
+.info-field {
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #1e3a2a;
+  border-radius: 6px;
+}
+.info-field label {
+  font-size: 10px;
+  color: #81c784;
+  display: block;
+  margin-bottom: 4px;
+}
+.info-field .value {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  word-break: break-word;
+}
+.info-divider {
+  height: 1px;
+  background: #2e7d32;
+  margin: 12px 0;
+}
+</style>
+</head>
+<body>
+
+<button class="sidebar-toggle" id="sidebarToggle">☰</button>
+<div class="sidebar-overlay hidden" id="sidebarOverlay"></div>
+
+<div id="sidebar">
+  <div>
+    <h2>⚡ Alfa</h2>
+    <div class="subtitle">Controle de perímetro de terrenos</div>
+  </div>
+
+  <div>
+    <div class="drop" id="geoDrop">📂 Carregar Perímetros (Excel)</div>
+    <input type="file" id="geoInput" accept=".xlsx, .xls" style="display:none">
+    <div class="info-marker">📌 Colunas: Terreno, Ponto, Latitude, Longitude, m², Proprietário, Número</div>
+    <div id="geoFileInfo" class="file-info"></div>
+  </div>
+
+  <button class="btn-registro" id="btnNovaRocada">✂️ Registrar nova roçada</button>
+  <button class="btn-relatorio" id="btnGerarRelatorio">📊 Gerar relatório do terreno</button>
+  <button class="btn-info" id="btnInfoTerreno">ℹ️ Informações do terreno</button>
+
+  <div class="stats-card" id="statsCard">
+    <div class="stats-title">📊 Status dos Terrenos</div>
+    <div id="statsList" class="stats-list">
+      <div style="text-align: center; color: #888; padding: 10px;">Carregue os dados</div>
+    </div>
+    <div class="stat-detail" style="font-size: 9px; margin-top: 6px;">✅ ≤14d | 🟡 15-20d | 🔴 ≥21d</div>
+  </div>
+
+  <div class="legend">
+    <h4>🎨 Legenda</h4>
+    <div class="legend-item"><div class="color-box green"></div><span>Em dia (≤ 14 dias)</span></div>
+    <div class="legend-item"><div class="color-box yellow"></div><span>Atenção (15-20 dias)</span></div>
+    <div class="legend-item"><div class="color-box red"></div><span>Urgente (≥ 21 dias)</span></div>
+    <div class="legend-item"><div class="color-box gray"></div><span>Sem informação</span></div>
+  </div>
+
+  <div class="separator"></div>
+  <div class="storage-status" id="storageStatus">💾 Armazenamento Local</div>
+</div>
+
+<div id="map"></div>
+
+<div id="reportModal" class="report-modal">
+  <div class="report-header">
+    <h3 id="reportTitle">📋 Relatório do Terreno</h3>
+    <button class="close-report" id="closeReportBtn">✕</button>
+  </div>
+  <div id="reportContent" class="report-content">
+    <div class="report-empty">Selecione um terreno no mapa ou na lista</div>
+  </div>
+  <div class="report-footer">
+    <button class="btn-print" id="btnPrintReport">🖨️ Imprimir / Salvar PDF</button>
+  </div>
+</div>
+
+<div id="infoModal" class="info-modal">
+  <div class="info-header">
+    <h3>ℹ️ Informações do Terreno</h3>
+    <button class="close-info" id="closeInfoBtn">✕</button>
+  </div>
+  <div id="infoContent" class="info-content">
+    <div class="info-empty">Selecione um terreno no mapa ou na lista</div>
+  </div>
+  <div class="info-footer">
+    <button class="btn-route" id="btnOpenRoute">🗺️ Abrir rota no Google Maps</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // ==================== MAPA SATÉLITE ====================
+  const map = L.map('map').setView([-23.5505, -46.6333], 14);
+  
+  const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    attribution: '&copy; Google Maps',
+    maxZoom: 22,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+  });
+  googleSatellite.addTo(map);
+  
+  // ==================== STORAGE ====================
+  const DB_NAME = 'AlfaDB';
+  const DB_VERSION = 2;
+  const TERRENOS_STORE = 'terrenos';
+  const ROCADAS_STORE = 'rocadas';
+  
+  let db = null;
+  let poligonos = {};
+  let rocadasData = [];
+  let mapLayers = new Map();
+  let statusTerrenos = new Map();
+  let boundsPoints = [];
+  let infoTerrenos = new Map(); // Armazenar proprietário e número por terreno
+  
+  const geoFileInfo = document.getElementById('geoFileInfo');
+  const statsListDiv = document.getElementById('statsList');
+  const statsCard = document.getElementById('statsCard');
+  const reportContent = document.getElementById('reportContent');
+  const reportModal = document.getElementById('reportModal');
+  const closeReportBtn = document.getElementById('closeReportBtn');
+  const reportTitle = document.getElementById('reportTitle');
+  const btnPrintReport = document.getElementById('btnPrintReport');
+  const infoModal = document.getElementById('infoModal');
+  const infoContent = document.getElementById('infoContent');
+  const closeInfoBtn = document.getElementById('closeInfoBtn');
+  const btnOpenRoute = document.getElementById('btnOpenRoute');
+  
+  let currentInfoTerreno = null;
+  let currentInfoCenter = null;
+  
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        db = request.result;
+        resolve(db);
+      };
+      request.onupgradeneeded = (event) => {
+        const dbUp = event.target.result;
+        if (!dbUp.objectStoreNames.contains(TERRENOS_STORE)) {
+          dbUp.createObjectStore(TERRENOS_STORE, { keyPath: 'terreno' });
+        }
+        if (!dbUp.objectStoreNames.contains(ROCADAS_STORE)) {
+          dbUp.createObjectStore(ROCADAS_STORE, { keyPath: 'id', autoIncrement: true });
+        }
+      };
+    });
+  }
+  
+  async function salvarPoligonosLocal(data) {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([TERRENOS_STORE], 'readwrite');
+      const store = tx.objectStore(TERRENOS_STORE);
+      store.clear();
+      for (const [terreno, value] of Object.entries(data)) {
+        store.put({ 
+          terreno, 
+          pontos: value.pontos, 
+          ordem: value.ordem, 
+          areaM2: value.areaM2,
+          proprietario: value.proprietario || '',
+          numero: value.numero || ''
+        });
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+  
+  async function carregarPoligonosLocal() {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([TERRENOS_STORE], 'readonly');
+      const store = tx.objectStore(TERRENOS_STORE);
+      const request = store.getAll();
+      request.onsuccess = () => {
+        const result = {};
+        request.result.forEach(item => {
+          result[item.terreno] = { 
+            pontos: item.pontos, 
+            ordem: item.ordem,
+            areaM2: item.areaM2 || 0,
+            proprietario: item.proprietario || '',
+            numero: item.numero || ''
+          };
+        });
+        resolve(result);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  }
+  
+  async function salvarRocadasLocal(data) {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([ROCADAS_STORE], 'readwrite');
+      const store = tx.objectStore(ROCADAS_STORE);
+      store.clear();
+      data.forEach(r => store.add(r));
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+  
+  async function carregarRocadasLocal() {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([ROCADAS_STORE], 'readonly');
+      const store = tx.objectStore(ROCADAS_STORE);
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+  
+  // Conversor de coordenada
+  function converterCoordenada(coord) {
+    if (!coord) return null;
+    let str = String(coord).trim();
+    if (str.toLowerCase().includes('inexistente') || str === '') return null;
+    
+    const dmsPattern = /(\d+)°\s*(\d+)'\s*([\d.]+)"\s*([NSWEOnsweO])/i;
+    const match = str.match(dmsPattern);
+    
+    if (match) {
+      let graus = parseFloat(match[1]);
+      let minutos = parseFloat(match[2]);
+      let segundos = parseFloat(match[3]);
+      let direcao = match[4].toUpperCase();
+      let decimal = graus + (minutos / 60) + (segundos / 3600);
+      if (direcao === 'S' || direcao === 'SOUTH') decimal = -decimal;
+      if (direcao === 'W' || direcao === 'O' || direcao === 'WEST') decimal = -decimal;
+      return decimal;
+    }
+    
+    let temp = str.replace(',', '.');
+    temp = temp.replace(/[^0-9.-]/g, '');
+    let num = parseFloat(temp);
+    return !isNaN(num) && num !== 0 ? num : null;
+  }
+  
+  function parseDateBr(dateStr) {
+    if (!dateStr) return null;
+    let parts = String(dateStr).trim().split('/');
+    if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]);
+    let d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  
+  function formatArea(areaM2) {
+    if (!areaM2 || areaM2 === 0) return '';
+    if (areaM2 >= 10000) {
+      return `${(areaM2 / 10000).toFixed(2)} ha`;
+    }
+    return `${areaM2.toLocaleString('pt-BR')} m²`;
+  }
+  
+  function calcularStatus(dias) {
+    if (dias === null) return { cor: "#6b7280", texto: "Sem informação", status: "gray" };
+    if (dias <= 14) return { cor: "#22c55e", texto: "Em dia", status: "green" };
+    if (dias <= 20) return { cor: "#eab308", texto: "Atenção", status: "yellow" };
+    return { cor: "#ef4444", texto: "Urgente", status: "red" };
+  }
+  
+  function processarStatus() {
+    statusTerrenos.clear();
+    const hoje = new Date();
+    const rocadasPorTerreno = new Map();
+    
+    for (let r of rocadasData) {
+      if (!r.terreno) continue;
+      if (!rocadasPorTerreno.has(r.terreno)) rocadasPorTerreno.set(r.terreno, []);
+      const dataObj = parseDateBr(r.data);
+      if (dataObj && !isNaN(dataObj)) {
+        rocadasPorTerreno.get(r.terreno).push({ data: dataObj, dataStr: r.data, observacoes: r.observacoes || "" });
+      }
+    }
+    
+    for (let terreno in poligonos) {
+      const rocadas = rocadasPorTerreno.get(terreno) || [];
+      if (rocadas.length) {
+        rocadas.sort((a,b) => b.data - a.data);
+        const ultima = rocadas[0];
+        const diffDays = Math.floor((hoje - ultima.data) / (1000 * 60 * 60 * 24));
+        const status = calcularStatus(diffDays);
+        statusTerrenos.set(terreno, { 
+          dias: diffDays, 
+          dataUltima: ultima.dataStr, 
+          status: status.status, 
+          cor: status.cor, 
+          texto: status.texto,
+          areaM2: poligonos[terreno].areaM2 || 0
+        });
+      } else {
+        statusTerrenos.set(terreno, { 
+          dias: null, 
+          dataUltima: null, 
+          status: "gray", 
+          cor: "#6b7280", 
+          texto: "Nunca roçado",
+          areaM2: poligonos[terreno].areaM2 || 0
+        });
+      }
+    }
+  }
+  
+  function atualizarStatsUI() {
+    const terrenos = Object.keys(poligonos);
+    if (!terrenos.length) {
+      statsListDiv.innerHTML = '<div style="text-align: center; color: #888; padding: 10px;">Nenhum terreno</div>';
+      statsCard.classList.remove('show');
+      return;
+    }
+    statsCard.classList.add('show');
+    const lista = Array.from(statusTerrenos.entries()).sort((a,b) => {
+      const diasA = a[1].dias !== null ? a[1].dias : 999;
+      const diasB = b[1].dias !== null ? b[1].dias : 999;
+      return diasB - diasA;
+    });
+    statsListDiv.innerHTML = lista.map(([nome, info]) => {
+      let diasText = info.dias !== null ? `${info.dias}d` : 'Nunca';
+      let areaText = info.areaM2 ? ` | ${formatArea(info.areaM2)}` : '';
+      return `<div class="stat-item" data-terreno="${nome}">
+        <div class="stat-label">${nome}${areaText}</div>
+        <div class="stat-value ${info.status}">${info.texto} (${diasText})</div>
+      </div>`;
+    }).join('');
+    
+    document.querySelectorAll('.stat-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const terreno = el.dataset.terreno;
+        if (terreno) gerarRelatorio(terreno);
+      });
+    });
+  }
+  
+  function limparMapa() {
+    mapLayers.forEach((layer) => { if (layer && map.hasLayer(layer)) map.removeLayer(layer); });
+    mapLayers.clear();
+    boundsPoints = [];
+  }
+  
+  function calcularCentro(pontos) {
+    if (!pontos.length) return [0,0];
+    let lat = 0, lng = 0;
+    for (let p of pontos) { lat += p[0]; lng += p[1]; }
+    return [lat / pontos.length, lng / pontos.length];
+  }
+  
+  function desenharTerrenos() {
+    if (!Object.keys(poligonos).length) return;
+    limparMapa();
+    
+    for (let terreno in poligonos) {
+      const pontos = poligonos[terreno].pontos;
+      const areaM2 = poligonos[terreno].areaM2 || 0;
+      if (!pontos.length || pontos.length < 3) continue;
+      
+      pontos.forEach(p => boundsPoints.push(p));
+      const statusInfo = statusTerrenos.get(terreno) || { cor: "#6b7280", texto: "Sem info", dataUltima: null, areaM2: areaM2 };
+      
+      const coordsPoligono = [...pontos];
+      coordsPoligono.push(coordsPoligono[0]);
+      
+      const polygon = L.polygon(coordsPoligono, {
+        color: statusInfo.cor,
+        weight: 2.5,
+        fillColor: statusInfo.cor,
+        fillOpacity: 0.35,
+        smoothFactor: 1
+      }).addTo(map);
+      
+      let tooltipText = `<strong>${terreno}</strong><br>📅 ${statusInfo.dataUltima || 'Nunca'}<br>📌 ${statusInfo.texto}`;
+      if (statusInfo.dias !== null) tooltipText += ` (${statusInfo.dias} dias)`;
+      if (areaM2 > 0) tooltipText += `<br>📐 ${formatArea(areaM2)}`;
+      polygon.bindTooltip(tooltipText, { sticky: true, className: 'custom-tooltip' });
+      polygon.on('click', () => gerarRelatorio(terreno));
+      mapLayers.set(`${terreno}_polygon`, polygon);
+      
+      const centro = calcularCentro(pontos);
+      const areaFormatada = formatArea(areaM2);
+      const labelHtml = areaFormatada ? 
+        `<div>⚡ ${terreno}<br><small>${areaFormatada}</small></div>` : 
+        `<div>⚡ ${terreno}</div>`;
+      
+      const icon = L.divIcon({ 
+        className: 'terreno-label', 
+        html: labelHtml, 
+        iconSize: areaFormatada ? [130, 45] : [100, 32], 
+        iconAnchor: areaFormatada ? [65, 22] : [50, 16]
+      });
+      const labelMarker = L.marker(centro, { icon }).addTo(map);
+      labelMarker.on('click', () => gerarRelatorio(terreno));
+      mapLayers.set(`${terreno}_label`, labelMarker);
+    }
+    
+    if (boundsPoints.length) map.fitBounds(boundsPoints);
+    atualizarStatsUI();
+  }
+  
+  function mostrarInformacoes(terreno) {
+    const info = poligonos[terreno];
+    if (!info) {
+      infoContent.innerHTML = '<div class="info-empty">❌ Terreno não encontrado</div>';
+      infoModal.classList.add('show');
+      return;
+    }
+    
+    currentInfoTerreno = terreno;
+    const centro = calcularCentro(info.pontos);
+    currentInfoCenter = centro;
+    
+    const areaFormatada = formatArea(info.areaM2);
+    const statusInfo = statusTerrenos.get(terreno) || {};
+    
+    let html = `
+      <div class="info-field">
+        <label>🏷️ Nome do Terreno</label>
+        <div class="value">${terreno}</div>
+      </div>
+      <div class="info-field">
+        <label>👤 Proprietário</label>
+        <div class="value">${info.proprietario || 'Não informado'}</div>
+      </div>
+      <div class="info-field">
+        <label>🔢 Número / Registro</label>
+        <div class="value">${info.numero || 'Não informado'}</div>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-field">
+        <label>📐 Área</label>
+        <div class="value">${areaFormatada || 'Não informada'}</div>
+      </div>
+      <div class="info-field">
+        <label>📅 Última Roçada</label>
+        <div class="value">${statusInfo.dataUltima || 'Nunca realizada'}</div>
+      </div>
+      <div class="info-field">
+        <label>📊 Status</label>
+        <div class="value" style="color: ${statusInfo.cor || '#fff'}">${statusInfo.texto || 'Sem informação'} ${statusInfo.dias !== null ? `(há ${statusInfo.dias} dias)` : ''}</div>
+      </div>
+      <div class="info-field">
+        <label>📍 Coordenada Central</label>
+        <div class="value">${centro[0].toFixed(6)}°, ${centro[1].toFixed(6)}°</div>
+      </div>
+    `;
+    
+    infoContent.innerHTML = html;
+    infoModal.classList.add('show');
+    if (isMobile) closeSidebar();
+  }
+  
+  function abrirRotaGoogleMaps() {
+    if (currentInfoCenter && currentInfoTerreno) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${currentInfoCenter[0]},${currentInfoCenter[1]}&destination_place_id=${encodeURIComponent(currentInfoTerreno)}`;
+      window.open(url, '_blank');
+    } else {
+      alert('Selecione um terreno primeiro');
+    }
+  }
+  
+  function gerarRelatorio(terreno) {
+    const rocadasTerreno = rocadasData.filter(r => r.terreno === terreno).sort((a,b) => {
+      const da = parseDateBr(a.data);
+      const db = parseDateBr(b.data);
+      return db - da;
+    });
+    
+    const info = poligonos[terreno] || {};
+    const areaM2 = info.areaM2 || 0;
+    const areaFormatada = formatArea(areaM2);
+    const statusInfo = statusTerrenos.get(terreno) || {};
+    
+    reportTitle.innerHTML = `📋 Relatório: ${terreno}`;
+    
+    let html = `<div style="margin-bottom: 16px; padding: 12px; background: #0f2a1f; border-radius: 8px;">
+                  <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">📐 Informações do Terreno</div>
+                  <div style="font-size: 11px;">👤 Proprietário: ${info.proprietario || 'Não informado'}</div>
+                  <div style="font-size: 11px; margin-top: 4px;">🔢 Número: ${info.numero || 'Não informado'}</div>
+                  <div style="font-size: 11px; margin-top: 4px;">${areaFormatada ? `Área: ${areaFormatada}` : 'Área não informada'}</div>
+                  <div style="font-size: 11px; margin-top: 4px;">Status: ${statusInfo.texto || 'Sem informação'} ${statusInfo.dias !== null ? `(última roçada há ${statusInfo.dias} dias)` : ''}</div>
+                  <div style="font-size: 11px;">Última roçada: ${statusInfo.dataUltima || 'Nunca'}</div>
+                </div>`;
+    
+    if (!rocadasTerreno.length) {
+      html += '<div class="report-empty">📭 Nenhuma roçada registrada para este terreno</div>';
+    } else {
+      html += '<div style="font-size: 12px; font-weight: 600; margin-bottom: 10px;">✂️ Histórico de Roçadas:</div>';
+      html += rocadasTerreno.map(item => `
+        <div class="report-item">
+          <div class="date">📅 ${item.data}</div>
+          <div class="obs">📝 ${item.observacoes || 'Sem observações'}</div>
+        </div>
+      `).join('');
+    }
+    
+    reportContent.innerHTML = html;
+    reportModal.classList.add('show');
+    if (isMobile) closeSidebar();
+  }
+  
+  function fecharRelatorio() { reportModal.classList.remove('show'); }
+  function fecharInfo() { infoModal.classList.remove('show'); }
+  
+  function imprimirRelatorio() {
+    const printContent = document.getElementById('reportContent').innerHTML;
+    const title = document.getElementById('reportTitle').innerHTML;
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Relatório Alfa</title>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: 'Inter', Arial, sans-serif; margin: 40px; color: #333; }
+          h1 { color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }
+          .report-item { border-left: 3px solid #2e7d32; margin: 15px 0; padding: 10px; background: #f5f5f5; }
+          .date { font-weight: bold; color: #2e7d32; }
+          .obs { margin-top: 5px; color: #555; }
+          .info-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+          @media print {
+            body { margin: 20px; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${title.replace('📋 ', '')}</h1>
+        ${printContent}
+        <p style="margin-top: 30px; font-size: 10px; color: #999;">Gerado por Alfa - ${new Date().toLocaleString('pt-BR')}</p>
+      </body>
+      </html>
+    `);
+    win.document.close();
+    win.print();
+  }
+  
+  async function loadPoligonos(file) {
+    showLoading(true);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+        
+        const pontosPorTerreno = new Map();
+        
+        for (let row of json) {
+          const terreno = row["Terreno"] || row["terreno"];
+          let pontoNum = parseInt(row["Ponto"] || row["ponto"] || row["PONTO"]);
+          let lat = converterCoordenada(row["Latitude"] || row["latitude"]);
+          let lng = converterCoordenada(row["Longitude"] || row["longitude"]);
+          let areaM2 = parseFloat(String(row["m²"] || row["m2"] || row["area"] || row["Area"] || 0).replace(',', '.'));
+          let proprietario = row["Proprietário"] || row["proprietario"] || row["PROPRIETARIO"] || "";
+          let numero = row["Número"] || row["numero"] || row["NUMERO"] || row["Número do Terreno"] || "";
+          
+          if (!terreno || isNaN(pontoNum) || lat === null || lng === null) continue;
+          
+          if (!pontosPorTerreno.has(terreno)) {
+            pontosPorTerreno.set(terreno, { pontos: [], areaM2: 0, proprietario: '', numero: '' });
+          }
+          const terrData = pontosPorTerreno.get(terreno);
+          terrData.pontos.push({ pontoNum, lat, lng });
+          if (areaM2 > 0 && terrData.areaM2 === 0) terrData.areaM2 = areaM2;
+          if (proprietario && !terrData.proprietario) terrData.proprietario = proprietario;
+          if (numero && !terrData.numero) terrData.numero = numero;
+        }
+        
+        const novosPoligonos = {};
+        for (let [terreno, terrData] of pontosPorTerreno.entries()) {
+          if (terrData.pontos.length < 3) {
+            alert(`Terreno "${terreno}" tem apenas ${terrData.pontos.length} pontos - ignorado`);
+            continue;
+          }
+          terrData.pontos.sort((a,b) => a.pontoNum - b.pontoNum);
+          novosPoligonos[terreno] = {
+            pontos: terrData.pontos.map(p => [p.lat, p.lng]),
+            ordem: terrData.pontos.map(p => p.pontoNum),
+            areaM2: terrData.areaM2 || 0,
+            proprietario: terrData.proprietario || '',
+            numero: terrData.numero || ''
+          };
+        }
+        
+        if (Object.keys(novosPoligonos).length === 0) {
+          alert("Nenhum polígono válido! Necessário mínimo 3 pontos por terreno.");
+          showLoading(false);
+          return;
+        }
+        
+        poligonos = novosPoligonos;
+        await salvarPoligonosLocal(poligonos);
+        
+        const totalAreas = Object.values(poligonos).filter(p => p.areaM2 > 0).length;
+        geoFileInfo.innerHTML = `📄 ${file.name} (${Object.keys(poligonos).length} terrenos, ${totalAreas} com área)`;
+        processarStatus();
+        desenharTerrenos();
+      } catch(err) { alert('Erro: ' + err.message); }
+      finally { showLoading(false); }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+  
+  async function novaRocadaManual() {
+    const terrenos = Object.keys(poligonos);
+    if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
+    
+    const terrenoNome = prompt("Digite o nome do terreno:", terrenos[0]);
+    if (!terrenoNome) return;
+    if (!poligonos[terrenoNome]) { alert("Terreno não encontrado no cadastro!"); return; }
+    
+    const dataRocada = prompt("Digite a data da roçada (formato DD/MM/AAAA):", new Date().toLocaleDateString('pt-BR'));
+    if (!dataRocada) return;
+    
+    const observacoes = prompt("Observações (opcional):", "") || "";
+    
+    rocadasData.push({ 
+      terreno: terrenoNome, 
+      data: dataRocada, 
+      observacoes, 
+      id: Date.now() 
+    });
+    
+    await salvarRocadasLocal(rocadasData);
+    processarStatus();
+    if (Object.keys(poligonos).length) desenharTerrenos();
+    atualizarStatsUI();
+    alert("✅ Roçada registrada com sucesso!");
+  }
+  
+  function selecionarTerrenoParaRelatorio() {
+    const terrenos = Object.keys(poligonos);
+    if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
+    const terrenoNome = prompt("Digite o nome do terreno para gerar relatório:", terrenos[0]);
+    if (!terrenoNome) return;
+    if (!poligonos[terrenoNome]) { alert("Terreno não encontrado!"); return; }
+    gerarRelatorio(terrenoNome);
+  }
+  
+  function selecionarTerrenoParaInfo() {
+    const terrenos = Object.keys(poligonos);
+    if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
+    const terrenoNome = prompt("Digite o nome do terreno para ver informações:", terrenos[0]);
+    if (!terrenoNome) return;
+    if (!poligonos[terrenoNome]) { alert("Terreno não encontrado!"); return; }
+    mostrarInformacoes(terrenoNome);
+  }
+  
+  function showLoading(show) {
+    let el = document.querySelector('.loading-global');
+    if (show && !el) {
+      el = document.createElement('div');
+      el.className = 'loading-global';
+      el.innerHTML = '<div class="loading"></div><span>Processando...</span>';
+      document.body.appendChild(el);
+    } else if (!show && el) el.remove();
+  }
+  
+  function setupInput(dropId, inputId, callback) {
+    const drop = document.getElementById(dropId), input = document.getElementById(inputId);
+    drop.onclick = () => { input.click(); if (isMobile) closeSidebar(); };
+    input.onchange = e => { if (e.target.files[0]) callback(e.target.files[0]); };
+    drop.ondragover = e => e.preventDefault();
+    drop.ondrop = e => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file) callback(file); };
+  }
+  
+  async function carregarDadosSalvos() {
+    showLoading(true);
+    await openDB();
+    const poligonosSalvos = await carregarPoligonosLocal();
+    if (Object.keys(poligonosSalvos).length) {
+      poligonos = poligonosSalvos;
+      geoFileInfo.innerHTML = `📄 Dados salvos (${Object.keys(poligonos).length} terrenos)`;
+    }
+    const rocadasSalvas = await carregarRocadasLocal();
+    if (rocadasSalvas.length) {
+      rocadasData = rocadasSalvas;
+    }
+    if (Object.keys(poligonos).length) {
+      processarStatus();
+      desenharTerrenos();
+    }
+    showLoading(false);
+  }
+  
+  // Mobile
+  const sidebar = document.getElementById('sidebar');
+  const sidebarToggleBtn = document.getElementById('sidebarToggle');
+  const sidebarOverlayDiv = document.getElementById('sidebarOverlay');
+  let isMobile = window.innerWidth <= 768;
+  function checkMobile() {
+    isMobile = window.innerWidth <= 768;
+    if (!isMobile) { sidebar.classList.remove('open'); sidebarOverlayDiv.classList.add('hidden'); }
+  }
+  function openSidebar() { if (isMobile) { sidebar.classList.add('open'); sidebarOverlayDiv.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
+  function closeSidebar() { if (isMobile) { sidebar.classList.remove('open'); sidebarOverlayDiv.classList.add('hidden'); document.body.style.overflow = ''; } }
+  sidebarToggleBtn.addEventListener('click', () => { if (sidebar.classList.contains('open')) closeSidebar(); else openSidebar(); });
+  sidebarOverlayDiv.addEventListener('click', closeSidebar);
+  window.addEventListener('resize', checkMobile);
+  checkMobile();
+  
+  // Eventos
+  setupInput("geoDrop", "geoInput", loadPoligonos);
+  document.getElementById("btnNovaRocada").addEventListener("click", novaRocadaManual);
+  document.getElementById("btnGerarRelatorio").addEventListener("click", selecionarTerrenoParaRelatorio);
+  document.getElementById("btnInfoTerreno").addEventListener("click", selecionarTerrenoParaInfo);
+  closeReportBtn.addEventListener("click", fecharRelatorio);
+  closeInfoBtn.addEventListener("click", fecharInfo);
+  btnPrintReport.addEventListener("click", imprimirRelatorio);
+  btnOpenRoute.addEventListener("click", abrirRotaGoogleMaps);
+  
+  carregarDadosSalvos();
+  console.log("✅ Sistema Alfa inicializado com informações de proprietário e rota!");
+});
+</script>
+</body>
+</html>
