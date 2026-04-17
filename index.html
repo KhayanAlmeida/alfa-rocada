@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Alfa - Controle de Terrenos com Firebase</title>
+<title>Alfa - Controle de Terrenos</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
 * {
@@ -89,7 +90,6 @@ body {
   .sidebar-overlay { display: block; }
   .sidebar-overlay.hidden { display: none; }
   #map { height: 100vh; width: 100%; }
-  .fab-container { bottom: 16px; right: 16px; }
   .report-modal, .info-modal { width: 90%; right: 5%; left: 5%; bottom: 80px; }
   #sidebar { padding: 16px; gap: 12px; }
 }
@@ -186,8 +186,8 @@ body {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  width: 420px;
-  max-height: 70vh;
+  width: 500px;
+  max-height: 85vh;
   background: #1e3a2a;
   border-radius: 14px;
   border-left: 4px solid #4caf50;
@@ -217,43 +217,8 @@ body {
 .info-header h3 { color: #60a5fa; }
 .close-report, .close-info { background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer; padding: 0 6px; transition: color 0.2s; }
 .close-report:hover, .close-info:hover { color: #ff4444; }
-.report-content, .info-content { padding: 16px; overflow-y: auto; max-height: 55vh; }
-.report-item, .info-item {
-  background: #2a4a3a;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-left: 3px solid #4caf50;
-}
-.info-item { border-left-color: #3b82f6; background: #2a3a4a; }
-.report-item .date { font-size: 12px; color: #81c784; font-weight: 600; margin-bottom: 6px; }
-.report-item .obs { font-size: 11px; color: #ddd; margin-top: 4px; }
+.report-content, .info-content { padding: 16px; overflow-y: auto; max-height: 65vh; }
 .report-empty, .info-empty { text-align: center; color: #aaa; padding: 20px; font-size: 12px; }
-.report-footer, .info-footer {
-  padding: 12px 16px;
-  background: #0f2a1f;
-  border-top: 1px solid #2e7d32;
-  font-size: 10px;
-  color: #81c784;
-  text-align: center;
-}
-.info-footer { border-top-color: #3b82f6; }
-.btn-print, .btn-route {
-  background: #2e7d32;
-  border: none;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 600;
-  margin-top: 8px;
-  width: 100%;
-  transition: all 0.2s;
-}
-.btn-route { background: #1e40af; }
-.btn-route:hover { background: #1e3a8a; }
-.btn-print:hover { background: #1b5e20; }
 
 #map { 
   flex: 1; 
@@ -395,50 +360,36 @@ body {
   margin-top: 3px;
 }
 
-.info-field {
-  margin-bottom: 12px;
-  padding: 8px;
-  background: #1e3a2a;
-  border-radius: 6px;
-}
-.info-field label {
-  font-size: 10px;
-  color: #81c784;
-  display: block;
-  margin-bottom: 4px;
-}
-.info-field .value {
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-  word-break: break-word;
-}
-.info-divider {
-  height: 1px;
-  background: #2e7d32;
-  margin: 12px 0;
-}
-
-.sync-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #1e3a2a;
-  padding: 8px 12px;
+.photo-upload {
+  margin: 15px 0;
+  padding: 10px;
+  background: #2a4a3a;
   border-radius: 8px;
-  font-size: 10px;
 }
-.sync-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #f87171;
+.photo-upload label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #81c784;
 }
-.sync-indicator.synced { background: #4ade80; }
-.sync-indicator.syncing { background: #facc15; animation: pulse 1s infinite; }
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.photo-upload input {
+  display: block;
+  width: 100%;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #4caf50;
+  background: #1e3a2a;
+  color: white;
+  font-size: 11px;
+  cursor: pointer;
+}
+.photo-preview {
+  margin-top: 8px;
+  max-width: 100%;
+  max-height: 100px;
+  border-radius: 6px;
+  display: none;
 }
 </style>
 </head>
@@ -453,15 +404,12 @@ body {
     <div class="subtitle">Controle de perímetro de terrenos</div>
   </div>
 
-  <div class="sync-status">
-    <span>☁️ Sincronização</span>
-    <div class="sync-indicator" id="syncIndicator"></div>
-    <span id="syncText">Conectando...</span>
-  </div>
-
   <div>
-    <div class="drop" id="geoDrop">📂 Carregar Perímetros (Excel)</div>
-    <input type="file" id="geoInput" accept=".xlsx, .xls" style="display:none">
+    <div class="drop" id="geoDrop">
+      📂 Carregar Planilha (Excel/Google Sheets)
+      <div style="font-size: 10px; margin-top: 5px;">✅ Excel (.xlsx, .xls) | ✅ Google Drive</div>
+    </div>
+    <input type="file" id="geoInput" accept=".xlsx, .xls, .csv, .xlsm, .xltx, .xltm">
     <div class="info-marker">📌 Colunas: Terreno, Ponto, Latitude, Longitude, m², Proprietário, Número</div>
     <div id="geoFileInfo" class="file-info"></div>
   </div>
@@ -487,21 +435,40 @@ body {
   </div>
 
   <div class="separator"></div>
-  <div class="storage-status" id="storageStatus">💾 Verificando conexão...</div>
+  <div class="storage-status" id="storageStatus">💾 Armazenamento Local</div>
 </div>
 
 <div id="map"></div>
 
 <div id="reportModal" class="report-modal">
   <div class="report-header">
-    <h3 id="reportTitle">📋 Histórico de Roçadas</h3>
+    <h3>📋 Gerar Relatório de Roçada</h3>
     <button class="close-report" id="closeReportBtn">✕</button>
   </div>
   <div id="reportContent" class="report-content">
-    <div class="report-empty">Selecione um terreno no mapa ou na lista</div>
-  </div>
-  <div class="report-footer">
-    <button class="btn-print" id="btnPrintReport">🖨️ Imprimir / Salvar PDF</button>
+    <div style="padding: 10px;">
+      <div class="photo-upload">
+        <label>📸 Foto ANTES 1:</label>
+        <input type="file" id="fotoAntes1" accept="image/*">
+        <img id="previewAntes1" class="photo-preview">
+      </div>
+      <div class="photo-upload">
+        <label>📸 Foto ANTES 2:</label>
+        <input type="file" id="fotoAntes2" accept="image/*">
+        <img id="previewAntes2" class="photo-preview">
+      </div>
+      <div class="photo-upload">
+        <label>📸 Foto DEPOIS 1:</label>
+        <input type="file" id="fotoDepois1" accept="image/*">
+        <img id="previewDepois1" class="photo-preview">
+      </div>
+      <div class="photo-upload">
+        <label>📸 Foto DEPOIS 2:</label>
+        <input type="file" id="fotoDepois2" accept="image/*">
+        <img id="previewDepois2" class="photo-preview">
+      </div>
+      <button id="btnGerarRelatorioCompleto" style="background: #2e7d32; border: none; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; width: 100%; margin-top: 10px;">📄 Gerar Relatório Completo</button>
+    </div>
   </div>
 </div>
 
@@ -513,7 +480,7 @@ body {
   <div id="infoContent" class="info-content">
     <div class="info-empty">Selecione um terreno no mapa ou na lista</div>
   </div>
-  <div class="info-footer">
+  <div class="info-footer" style="padding: 12px 16px; background: #0f2a1f; border-top: 1px solid #3b82f6;">
     <button class="btn-route" id="btnOpenRoute">🗺️ Abrir rota no Google Maps</button>
   </div>
 </div>
@@ -521,315 +488,63 @@ body {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
 <script>
-// ==================== CONFIGURAÇÃO DO FIREBASE (SUAS CREDENCIAIS) ====================
-const firebaseConfig = {
-  apiKey: "AIzaSyDy3m1AIc00d82qmETM9Ymx5Zk2SCm36AQ",
-  authDomain: "alfa-rocagem.firebaseapp.com",
-  projectId: "alfa-rocagem",
-  storageBucket: "alfa-rocagem.firebasestorage.app",
-  messagingSenderId: "179730307608",
-  appId: "1:179730307608:web:0a973138a0b3bc1096016d",
-  measurementId: "G-SZ4WDDLF0B"
-};
-
-// Inicializar Firebase
-let db = null;
-let firebaseConnected = false;
-
-try {
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    firebaseConnected = true;
-    console.log("🔥 Firebase conectado com sucesso!");
-  } else {
-    db = firebase.firestore();
-    firebaseConnected = true;
-  }
-} catch (error) {
-  console.error("❌ Erro ao conectar Firebase:", error);
-  firebaseConnected = false;
-}
-
-// ==================== MAPA SATÉLITE ====================
+// Mapa
 const map = L.map('map').setView([-23.5505, -46.6333], 14);
-const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
   attribution: '&copy; Google Maps',
   maxZoom: 22,
   subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
-});
-googleSatellite.addTo(map);
+}).addTo(map);
 
-// ==================== DADOS PRINCIPAIS ====================
+// Dados
 let poligonos = {};
 let rocadasData = [];
 let mapLayers = new Map();
 let statusTerrenos = new Map();
-let boundsPoints = [];
+let currentSelectedTerreno = null;
+let currentTerrenoInfo = null;
+let currentInfoCenter = null;
 
-// Elementos DOM
+// Elementos
 const geoFileInfo = document.getElementById('geoFileInfo');
 const statsListDiv = document.getElementById('statsList');
 const statsCard = document.getElementById('statsCard');
-const reportContent = document.getElementById('reportContent');
 const reportModal = document.getElementById('reportModal');
 const closeReportBtn = document.getElementById('closeReportBtn');
-const reportTitle = document.getElementById('reportTitle');
-const btnPrintReport = document.getElementById('btnPrintReport');
 const infoModal = document.getElementById('infoModal');
 const infoContent = document.getElementById('infoContent');
 const closeInfoBtn = document.getElementById('closeInfoBtn');
 const btnOpenRoute = document.getElementById('btnOpenRoute');
-const storageStatus = document.getElementById('storageStatus');
-const syncIndicator = document.getElementById('syncIndicator');
-const syncText = document.getElementById('syncText');
 
-let currentInfoTerreno = null;
-let currentInfoCenter = null;
-
-// Atualizar UI de sincronização
-function updateSyncUI(synced, message) {
-  if (synced) {
-    syncIndicator.className = 'sync-indicator synced';
-    syncText.textContent = message || 'Sincronizado';
-    storageStatus.innerHTML = '☁️ Firebase conectado | Dados em nuvem';
-    storageStatus.className = 'storage-status online';
-  } else {
-    syncIndicator.className = 'sync-indicator';
-    syncText.textContent = message || 'Offline';
-    storageStatus.innerHTML = '⚠️ Offline | Dados salvos localmente';
-    storageStatus.className = 'storage-status offline';
-  }
-}
-
-// ==================== FUNÇÕES FIREBASE ====================
-async function salvarPoligonosFirebase(data) {
-  if (!firebaseConnected) return false;
-  try {
-    await db.collection('alfa_dados').doc('terrenos').set({
-      data: data,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    return true;
-  } catch (error) {
-    console.error("Erro ao salvar terrenos:", error);
-    return false;
-  }
-}
-
-async function carregarPoligonosFirebase() {
-  if (!firebaseConnected) return null;
-  try {
-    const doc = await db.collection('alfa_dados').doc('terrenos').get();
-    if (doc.exists) {
-      return doc.data().data;
-    }
-    return null;
-  } catch (error) {
-    console.error("Erro ao carregar terrenos:", error);
-    return null;
-  }
-}
-
-async function salvarRocadasFirebase(data) {
-  if (!firebaseConnected) return false;
-  try {
-    await db.collection('alfa_dados').doc('rocadas').set({
-      data: data,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    return true;
-  } catch (error) {
-    console.error("Erro ao salvar roçadas:", error);
-    return false;
-  }
-}
-
-async function carregarRocadasFirebase() {
-  if (!firebaseConnected) return null;
-  try {
-    const doc = await db.collection('alfa_dados').doc('rocadas').get();
-    if (doc.exists) {
-      return doc.data().data;
-    }
-    return null;
-  } catch (error) {
-    console.error("Erro ao carregar roçadas:", error);
-    return null;
-  }
-}
-
-// ==================== STORAGE LOCAL (FALLBACK) ====================
-const DB_NAME = 'AlfaDB';
-const DB_VERSION = 3;
-const TERRENOS_STORE = 'terrenos';
-const ROCADAS_STORE = 'rocadas';
-
-let localDB = null;
-
-function openLocalDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => {
-      localDB = request.result;
-      resolve(localDB);
-    };
-    request.onupgradeneeded = (event) => {
-      const dbUp = event.target.result;
-      if (!dbUp.objectStoreNames.contains(TERRENOS_STORE)) {
-        dbUp.createObjectStore(TERRENOS_STORE, { keyPath: 'terreno' });
-      }
-      if (!dbUp.objectStoreNames.contains(ROCADAS_STORE)) {
-        dbUp.createObjectStore(ROCADAS_STORE, { keyPath: 'id', autoIncrement: true });
-      }
-    };
-  });
-}
-
-async function salvarPoligonosLocal(data) {
-  if (!localDB) await openLocalDB();
-  return new Promise((resolve, reject) => {
-    const tx = localDB.transaction([TERRENOS_STORE], 'readwrite');
-    const store = tx.objectStore(TERRENOS_STORE);
-    store.clear();
-    for (const [terreno, value] of Object.entries(data)) {
-      store.put({ 
-        terreno, 
-        pontos: value.pontos, 
-        ordem: value.ordem, 
-        areaM2: value.areaM2,
-        proprietario: value.proprietario || '',
-        numero: value.numero || ''
-      });
-    }
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function carregarPoligonosLocal() {
-  if (!localDB) await openLocalDB();
-  return new Promise((resolve, reject) => {
-    const tx = localDB.transaction([TERRENOS_STORE], 'readonly');
-    const store = tx.objectStore(TERRENOS_STORE);
-    const request = store.getAll();
-    request.onsuccess = () => {
-      const result = {};
-      request.result.forEach(item => {
-        result[item.terreno] = { 
-          pontos: item.pontos, 
-          ordem: item.ordem,
-          areaM2: item.areaM2 || 0,
-          proprietario: item.proprietario || '',
-          numero: item.numero || ''
-        };
-      });
-      resolve(result);
-    };
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function salvarRocadasLocal(data) {
-  if (!localDB) await openLocalDB();
-  return new Promise((resolve, reject) => {
-    const tx = localDB.transaction([ROCADAS_STORE], 'readwrite');
-    const store = tx.objectStore(ROCADAS_STORE);
-    store.clear();
-    data.forEach(r => store.add(r));
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function carregarRocadasLocal() {
-  if (!localDB) await openLocalDB();
-  return new Promise((resolve, reject) => {
-    const tx = localDB.transaction([ROCADAS_STORE], 'readonly');
-    const store = tx.objectStore(ROCADAS_STORE);
-    const request = store.getAll();
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-// Salvar em ambos lugares (Firebase + Local)
-async function salvarPoligonosCompleto(data) {
-  await salvarPoligonosLocal(data);
-  if (firebaseConnected) {
-    await salvarPoligonosFirebase(data);
-  }
-}
-
-async function salvarRocadasCompleto(data) {
-  await salvarRocadasLocal(data);
-  if (firebaseConnected) {
-    await salvarRocadasFirebase(data);
-  }
-}
-
-// Carregar dados (prioriza Firebase, fallback Local)
-async function carregarDadosCompletos() {
-  showLoading(true);
-  updateSyncUI(false, 'Sincronizando...');
+function detectarColunas(row) {
+  const colunas = { terreno: null, ponto: null, latitude: null, longitude: null, area: null, proprietario: null, numero: null };
+  const keys = Object.keys(row).map(k => k.toLowerCase().trim());
   
-  let terrenosCarregados = false;
-  let rocadasCarregadas = false;
+  const terrenoPossiveis = ['terreno', 'nome', 'propriedade', 'lote', 'fazenda'];
+  for (let k of keys) if (terrenoPossiveis.some(p => k.includes(p))) { colunas.terreno = Object.keys(row)[keys.indexOf(k)]; break; }
   
-  // Tentar Firebase primeiro
-  if (firebaseConnected) {
-    try {
-      const firebaseTerrenos = await carregarPoligonosFirebase();
-      if (firebaseTerrenos && Object.keys(firebaseTerrenos).length > 0) {
-        poligonos = firebaseTerrenos;
-        await salvarPoligonosLocal(poligonos);
-        terrenosCarregados = true;
-        geoFileInfo.innerHTML = `☁️ Dados da nuvem (${Object.keys(poligonos).length} terrenos)`;
-      }
-      
-      const firebaseRocadas = await carregarRocadasFirebase();
-      if (firebaseRocadas && firebaseRocadas.length > 0) {
-        rocadasData = firebaseRocadas;
-        await salvarRocadasLocal(rocadasData);
-        rocadasCarregadas = true;
-      }
-    } catch (e) {
-      console.log("Erro ao carregar do Firebase, usando local", e);
-    }
-  }
+  const pontoPossiveis = ['ponto', 'pto', 'num', 'ordem'];
+  for (let k of keys) if (pontoPossiveis.some(p => k.includes(p))) { colunas.ponto = Object.keys(row)[keys.indexOf(k)]; break; }
   
-  // Fallback para Local se Firebase não tiver dados
-  if (!terrenosCarregados) {
-    const localTerrenos = await carregarPoligonosLocal();
-    if (Object.keys(localTerrenos).length > 0) {
-      poligonos = localTerrenos;
-      geoFileInfo.innerHTML = `💾 Dados locais (${Object.keys(poligonos).length} terrenos)`;
-    }
-  }
+  const latPossiveis = ['latitude', 'lat', 'y'];
+  for (let k of keys) if (latPossiveis.some(p => k.includes(p))) { colunas.latitude = Object.keys(row)[keys.indexOf(k)]; break; }
   
-  if (!rocadasCarregadas) {
-    const localRocadas = await carregarRocadasLocal();
-    if (localRocadas.length > 0) {
-      rocadasData = localRocadas;
-    }
-  }
+  const lngPossiveis = ['longitude', 'lon', 'lng', 'x'];
+  for (let k of keys) if (lngPossiveis.some(p => k.includes(p))) { colunas.longitude = Object.keys(row)[keys.indexOf(k)]; break; }
   
-  if (Object.keys(poligonos).length) {
-    processarStatus();
-    desenharTerrenos();
-  }
+  const areaPossiveis = ['m²', 'm2', 'area', 'ha'];
+  for (let k of keys) if (areaPossiveis.some(p => k === p || k.includes(p))) { colunas.area = Object.keys(row)[keys.indexOf(k)]; break; }
   
-  updateSyncUI(firebaseConnected, firebaseConnected ? 'Sincronizado' : 'Modo offline');
-  showLoading(false);
+  const propPossiveis = ['proprietario', 'proprietário', 'dono', 'cliente'];
+  for (let k of keys) if (propPossiveis.some(p => k.includes(p))) { colunas.proprietario = Object.keys(row)[keys.indexOf(k)]; break; }
+  
+  const numPossiveis = ['numero', 'número', 'registro', 'matricula'];
+  for (let k of keys) if (numPossiveis.some(p => k.includes(p))) { colunas.numero = Object.keys(row)[keys.indexOf(k)]; break; }
+  
+  return colunas;
 }
 
-// ==================== FUNÇÕES DE CONVERSÃO E UTILITÁRIOS ====================
 function converterCoordenada(coord) {
   if (!coord) return null;
   let str = String(coord).trim();
@@ -839,18 +554,14 @@ function converterCoordenada(coord) {
   const match = str.match(dmsPattern);
   
   if (match) {
-    let graus = parseFloat(match[1]);
-    let minutos = parseFloat(match[2]);
-    let segundos = parseFloat(match[3]);
-    let direcao = match[4].toUpperCase();
+    let graus = parseFloat(match[1]), minutos = parseFloat(match[2]), segundos = parseFloat(match[3]), direcao = match[4].toUpperCase();
     let decimal = graus + (minutos / 60) + (segundos / 3600);
     if (direcao === 'S' || direcao === 'SOUTH') decimal = -decimal;
     if (direcao === 'W' || direcao === 'O' || direcao === 'WEST') decimal = -decimal;
     return decimal;
   }
   
-  let temp = str.replace(',', '.');
-  temp = temp.replace(/[^0-9.-]/g, '');
+  let temp = str.replace(',', '.').replace(/[^0-9.-]/g, '');
   let num = parseFloat(temp);
   return !isNaN(num) && num !== 0 ? num : null;
 }
@@ -865,9 +576,7 @@ function parseDateBr(dateStr) {
 
 function formatArea(areaM2) {
   if (!areaM2 || areaM2 === 0) return '';
-  if (areaM2 >= 10000) {
-    return `${(areaM2 / 10000).toFixed(2)} ha`;
-  }
+  if (areaM2 >= 10000) return `${(areaM2 / 10000).toFixed(2)} ha`;
   return `${areaM2.toLocaleString('pt-BR')} m²`;
 }
 
@@ -899,23 +608,9 @@ function processarStatus() {
       const ultima = rocadas[0];
       const diffDays = Math.floor((hoje - ultima.data) / (1000 * 60 * 60 * 24));
       const status = calcularStatus(diffDays);
-      statusTerrenos.set(terreno, { 
-        dias: diffDays, 
-        dataUltima: ultima.dataStr, 
-        status: status.status, 
-        cor: status.cor, 
-        texto: status.texto,
-        areaM2: poligonos[terreno].areaM2 || 0
-      });
+      statusTerrenos.set(terreno, { dias: diffDays, dataUltima: ultima.dataStr, status: status.status, cor: status.cor, texto: status.texto, areaM2: poligonos[terreno].areaM2 || 0 });
     } else {
-      statusTerrenos.set(terreno, { 
-        dias: null, 
-        dataUltima: null, 
-        status: "gray", 
-        cor: "#6b7280", 
-        texto: "Nunca roçado",
-        areaM2: poligonos[terreno].areaM2 || 0
-      });
+      statusTerrenos.set(terreno, { dias: null, dataUltima: null, status: "gray", cor: "#6b7280", texto: "Nunca roçado", areaM2: poligonos[terreno].areaM2 || 0 });
     }
   }
 }
@@ -936,24 +631,17 @@ function atualizarStatsUI() {
   statsListDiv.innerHTML = lista.map(([nome, info]) => {
     let diasText = info.dias !== null ? `${info.dias}d` : 'Nunca';
     let areaText = info.areaM2 ? ` | ${formatArea(info.areaM2)}` : '';
-    return `<div class="stat-item" data-terreno="${nome}">
-      <div class="stat-label">${nome}${areaText}</div>
-      <div class="stat-value ${info.status}">${info.texto} (${diasText})</div>
-    </div>`;
+    return `<div class="stat-item" data-terreno="${nome}"><div class="stat-label">${nome}${areaText}</div><div class="stat-value ${info.status}">${info.texto} (${diasText})</div></div>`;
   }).join('');
   
   document.querySelectorAll('.stat-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const terreno = el.dataset.terreno;
-      if (terreno) mostrarHistorico(terreno);
-    });
+    el.addEventListener('click', () => { const terreno = el.dataset.terreno; if (terreno) abrirModalRelatorio(terreno); });
   });
 }
 
 function limparMapa() {
   mapLayers.forEach((layer) => { if (layer && map.hasLayer(layer)) map.removeLayer(layer); });
   mapLayers.clear();
-  boundsPoints = [];
 }
 
 function calcularCentro(pontos) {
@@ -961,107 +649,6 @@ function calcularCentro(pontos) {
   let lat = 0, lng = 0;
   for (let p of pontos) { lat += p[0]; lng += p[1]; }
   return [lat / pontos.length, lng / pontos.length];
-}
-
-function mostrarHistorico(terreno) {
-  const rocadasTerreno = rocadasData.filter(r => r.terreno === terreno).sort((a,b) => {
-    const da = parseDateBr(a.data);
-    const db = parseDateBr(b.data);
-    return db - da;
-  });
-  
-  const info = poligonos[terreno] || {};
-  const areaM2 = info.areaM2 || 0;
-  const areaFormatada = formatArea(areaM2);
-  const statusInfo = statusTerrenos.get(terreno) || {};
-  
-  reportTitle.innerHTML = `📋 Histórico: ${terreno}`;
-  
-  let html = `<div style="margin-bottom: 16px; padding: 12px; background: #0f2a1f; border-radius: 8px;">
-                <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">📐 Informações do Terreno</div>
-                <div style="font-size: 11px;">👤 Proprietário: ${info.proprietario || 'Não informado'}</div>
-                <div style="font-size: 11px; margin-top: 4px;">🔢 Número: ${info.numero || 'Não informado'}</div>
-                <div style="font-size: 11px; margin-top: 4px;">${areaFormatada ? `Área: ${areaFormatada}` : 'Área não informada'}</div>
-                <div style="font-size: 11px; margin-top: 4px;">Status: ${statusInfo.texto || 'Sem informação'} ${statusInfo.dias !== null ? `(última roçada há ${statusInfo.dias} dias)` : ''}</div>
-                <div style="font-size: 11px;">Última roçada: ${statusInfo.dataUltima || 'Nunca'}</div>
-              </div>`;
-  
-  if (!rocadasTerreno.length) {
-    html += '<div class="report-empty">📭 Nenhuma roçada registrada para este terreno</div>';
-  } else {
-    html += '<div style="font-size: 12px; font-weight: 600; margin-bottom: 10px;">✂️ Histórico de Roçadas:</div>';
-    html += rocadasTerreno.map(item => `
-      <div class="report-item">
-        <div class="date">📅 ${item.data}</div>
-        <div class="obs">📝 ${item.observacoes || 'Sem observações'}</div>
-      </div>
-    `).join('');
-  }
-  
-  reportContent.innerHTML = html;
-  reportModal.classList.add('show');
-  if (isMobile) closeSidebar();
-}
-
-function mostrarInformacoes(terreno) {
-  const info = poligonos[terreno];
-  if (!info) {
-    infoContent.innerHTML = '<div class="info-empty">❌ Terreno não encontrado</div>';
-    infoModal.classList.add('show');
-    return;
-  }
-  
-  currentInfoTerreno = terreno;
-  const centro = calcularCentro(info.pontos);
-  currentInfoCenter = centro;
-  
-  const areaFormatada = formatArea(info.areaM2);
-  const statusInfo = statusTerrenos.get(terreno) || {};
-  
-  let html = `
-    <div class="info-field">
-      <label>🏷️ Nome do Terreno</label>
-      <div class="value">${terreno}</div>
-    </div>
-    <div class="info-field">
-      <label>👤 Proprietário</label>
-      <div class="value">${info.proprietario || 'Não informado'}</div>
-    </div>
-    <div class="info-field">
-      <label>🔢 Número / Registro</label>
-      <div class="value">${info.numero || 'Não informado'}</div>
-    </div>
-    <div class="info-divider"></div>
-    <div class="info-field">
-      <label>📐 Área</label>
-      <div class="value">${areaFormatada || 'Não informada'}</div>
-    </div>
-    <div class="info-field">
-      <label>📅 Última Roçada</label>
-      <div class="value">${statusInfo.dataUltima || 'Nunca realizada'}</div>
-    </div>
-    <div class="info-field">
-      <label>📊 Status</label>
-      <div class="value" style="color: ${statusInfo.cor || '#fff'}">${statusInfo.texto || 'Sem informação'} ${statusInfo.dias !== null ? `(há ${statusInfo.dias} dias)` : ''}</div>
-    </div>
-    <div class="info-field">
-      <label>📍 Coordenada Central</label>
-      <div class="value">${centro[0].toFixed(6)}°, ${centro[1].toFixed(6)}°</div>
-    </div>
-  `;
-  
-  infoContent.innerHTML = html;
-  infoModal.classList.add('show');
-  if (isMobile) closeSidebar();
-}
-
-function abrirRotaGoogleMaps() {
-  if (currentInfoCenter && currentInfoTerreno) {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${currentInfoCenter[0]},${currentInfoCenter[1]}&destination_place_id=${encodeURIComponent(currentInfoTerreno)}`;
-    window.open(url, '_blank');
-  } else {
-    alert('Selecione um terreno primeiro');
-  }
 }
 
 function desenharTerrenos() {
@@ -1073,79 +660,24 @@ function desenharTerrenos() {
     const areaM2 = poligonos[terreno].areaM2 || 0;
     if (!pontos.length || pontos.length < 3) continue;
     
-    pontos.forEach(p => boundsPoints.push(p));
-    const statusInfo = statusTerrenos.get(terreno) || { cor: "#6b7280", texto: "Sem info", dataUltima: null, areaM2: areaM2 };
-    
+    const statusInfo = statusTerrenos.get(terreno) || { cor: "#6b7280", texto: "Sem info", dataUltima: null };
     const coordsPoligono = [...pontos];
     coordsPoligono.push(coordsPoligono[0]);
     
-    const polygon = L.polygon(coordsPoligono, {
-      color: statusInfo.cor,
-      weight: 2.5,
-      fillColor: statusInfo.cor,
-      fillOpacity: 0.35,
-      smoothFactor: 1
-    }).addTo(map);
-    
-    let tooltipText = `<strong>${terreno}</strong><br>📅 ${statusInfo.dataUltima || 'Nunca'}<br>📌 ${statusInfo.texto}`;
-    if (statusInfo.dias !== null) tooltipText += ` (${statusInfo.dias} dias)`;
-    if (areaM2 > 0) tooltipText += `<br>📐 ${formatArea(areaM2)}`;
-    polygon.bindTooltip(tooltipText, { sticky: true, className: 'custom-tooltip' });
-    polygon.on('click', () => mostrarHistorico(terreno));
+    const polygon = L.polygon(coordsPoligono, { color: statusInfo.cor, weight: 2.5, fillColor: statusInfo.cor, fillOpacity: 0.35, smoothFactor: 1 }).addTo(map);
+    polygon.bindTooltip(`<strong>${terreno}</strong><br>📅 ${statusInfo.dataUltima || 'Nunca'}<br>📌 ${statusInfo.texto}`, { sticky: true, className: 'custom-tooltip' });
+    polygon.on('click', () => abrirModalRelatorio(terreno));
     mapLayers.set(`${terreno}_polygon`, polygon);
     
     const centro = calcularCentro(pontos);
     const areaFormatada = formatArea(areaM2);
-    const labelHtml = areaFormatada ? 
-      `<div>⚡ ${terreno}<br><small>${areaFormatada}</small></div>` : 
-      `<div>⚡ ${terreno}</div>`;
-    
-    const icon = L.divIcon({ 
-      className: 'terreno-label', 
-      html: labelHtml, 
-      iconSize: areaFormatada ? [130, 45] : [100, 32], 
-      iconAnchor: areaFormatada ? [65, 22] : [50, 16]
-    });
+    const labelHtml = areaFormatada ? `<div>⚡ ${terreno}<br><small>${areaFormatada}</small></div>` : `<div>⚡ ${terreno}</div>`;
+    const icon = L.divIcon({ className: 'terreno-label', html: labelHtml, iconSize: areaFormatada ? [130, 45] : [100, 32], iconAnchor: areaFormatada ? [65, 22] : [50, 16] });
     const labelMarker = L.marker(centro, { icon }).addTo(map);
-    labelMarker.on('click', () => mostrarHistorico(terreno));
+    labelMarker.on('click', () => abrirModalRelatorio(terreno));
     mapLayers.set(`${terreno}_label`, labelMarker);
   }
-  
-  if (boundsPoints.length) map.fitBounds(boundsPoints);
   atualizarStatsUI();
-}
-
-function imprimirRelatorio() {
-  const printContent = document.getElementById('reportContent').innerHTML;
-  const title = document.getElementById('reportTitle').innerHTML;
-  const win = window.open('', '_blank');
-  win.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Relatório Alfa</title>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: 'Inter', Arial, sans-serif; margin: 40px; color: #333; }
-        h1 { color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }
-        .report-item { border-left: 3px solid #2e7d32; margin: 15px 0; padding: 10px; background: #f5f5f5; }
-        .date { font-weight: bold; color: #2e7d32; }
-        .obs { margin-top: 5px; color: #555; }
-        .info-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        @media print {
-          body { margin: 20px; }
-        }
-      </style>
-    </head>
-    <body>
-      <h1>${title.replace('📋 ', '')}</h1>
-      ${printContent}
-      <p style="margin-top: 30px; font-size: 10px; color: #999;">Gerado por Alfa - ${new Date().toLocaleString('pt-BR')}</p>
-    </body>
-    </html>
-  `);
-  win.document.close();
-  win.print();
 }
 
 async function loadPoligonos(file) {
@@ -1156,23 +688,27 @@ async function loadPoligonos(file) {
       const data = new Uint8Array(e.target.result);
       const wb = XLSX.read(data, { type: 'array' });
       const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+      if (!json.length) { alert("Planilha vazia!"); showLoading(false); return; }
+      
+      const colunas = detectarColunas(json[0]);
+      if (!colunas.terreno || !colunas.ponto || !colunas.latitude || !colunas.longitude) {
+        alert("Não foi possível identificar as colunas necessárias (Terreno, Ponto, Latitude, Longitude)");
+        showLoading(false); return;
+      }
       
       const pontosPorTerreno = new Map();
-      
       for (let row of json) {
-        const terreno = row["Terreno"] || row["terreno"];
-        let pontoNum = parseInt(row["Ponto"] || row["ponto"] || row["PONTO"]);
-        let lat = converterCoordenada(row["Latitude"] || row["latitude"]);
-        let lng = converterCoordenada(row["Longitude"] || row["longitude"]);
-        let areaM2 = parseFloat(String(row["m²"] || row["m2"] || row["area"] || row["Area"] || 0).replace(',', '.'));
-        let proprietario = row["Proprietário"] || row["proprietario"] || row["PROPRIETARIO"] || "";
-        let numero = row["Número"] || row["numero"] || row["NUMERO"] || row["Número do Terreno"] || "";
+        const terreno = row[colunas.terreno];
+        let pontoNum = parseInt(row[colunas.ponto]);
+        let lat = converterCoordenada(row[colunas.latitude]);
+        let lng = converterCoordenada(row[colunas.longitude]);
+        let areaM2 = colunas.area ? parseFloat(String(row[colunas.area] || 0).replace(',', '.')) : 0;
+        let proprietario = colunas.proprietario ? (row[colunas.proprietario] || "") : "";
+        let numero = colunas.numero ? (row[colunas.numero] || "") : "";
         
         if (!terreno || isNaN(pontoNum) || lat === null || lng === null) continue;
         
-        if (!pontosPorTerreno.has(terreno)) {
-          pontosPorTerreno.set(terreno, { pontos: [], areaM2: 0, proprietario: '', numero: '' });
-        }
+        if (!pontosPorTerreno.has(terreno)) pontosPorTerreno.set(terreno, { pontos: [], areaM2: 0, proprietario: '', numero: '' });
         const terrData = pontosPorTerreno.get(terreno);
         terrData.pontos.push({ pontoNum, lat, lng });
         if (areaM2 > 0 && terrData.areaM2 === 0) terrData.areaM2 = areaM2;
@@ -1182,10 +718,7 @@ async function loadPoligonos(file) {
       
       const novosPoligonos = {};
       for (let [terreno, terrData] of pontosPorTerreno.entries()) {
-        if (terrData.pontos.length < 3) {
-          alert(`Terreno "${terreno}" tem apenas ${terrData.pontos.length} pontos - ignorado`);
-          continue;
-        }
+        if (terrData.pontos.length < 3) { alert(`Terreno "${terreno}" tem apenas ${terrData.pontos.length} pontos - ignorado`); continue; }
         terrData.pontos.sort((a,b) => a.pontoNum - b.pontoNum);
         novosPoligonos[terreno] = {
           pontos: terrData.pontos.map(p => [p.lat, p.lng]),
@@ -1196,75 +729,251 @@ async function loadPoligonos(file) {
         };
       }
       
-      if (Object.keys(novosPoligonos).length === 0) {
-        alert("Nenhum polígono válido! Necessário mínimo 3 pontos por terreno.");
-        showLoading(false);
-        return;
-      }
+      if (Object.keys(novosPoligonos).length === 0) { alert("Nenhum polígono válido!"); showLoading(false); return; }
       
       poligonos = novosPoligonos;
-      await salvarPoligonosCompleto(poligonos);
-      
-      const totalAreas = Object.values(poligonos).filter(p => p.areaM2 > 0).length;
-      geoFileInfo.innerHTML = `📄 ${file.name} (${Object.keys(poligonos).length} terrenos, ${totalAreas} com área)`;
+      localStorage.setItem('alfa_poligonos', JSON.stringify(poligonos));
+      geoFileInfo.innerHTML = `📄 ${file.name} (${Object.keys(poligonos).length} terrenos)`;
       processarStatus();
       desenharTerrenos();
-      updateSyncUI(firebaseConnected, 'Sincronizado');
     } catch(err) { alert('Erro: ' + err.message); }
     finally { showLoading(false); }
   };
   reader.readAsArrayBuffer(file);
 }
 
+function carregarDadosSalvos() {
+  const salvos = localStorage.getItem('alfa_poligonos');
+  if (salvos) {
+    try {
+      poligonos = JSON.parse(salvos);
+      geoFileInfo.innerHTML = `💾 Dados salvos (${Object.keys(poligonos).length} terrenos)`;
+      processarStatus();
+      desenharTerrenos();
+    } catch(e) {}
+  }
+  const rocadasSalvas = localStorage.getItem('alfa_rocadas');
+  if (rocadasSalvas) {
+    try {
+      rocadasData = JSON.parse(rocadasSalvas);
+      processarStatus();
+      if (Object.keys(poligonos).length) desenharTerrenos();
+    } catch(e) {}
+  }
+}
+
+function salvarRocadasLocal() { localStorage.setItem('alfa_rocadas', JSON.stringify(rocadasData)); }
+
 async function novaRocadaManual() {
   const terrenos = Object.keys(poligonos);
   if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
-  
   const terrenoNome = prompt("Digite o nome do terreno:", terrenos[0]);
-  if (!terrenoNome) return;
-  if (!poligonos[terrenoNome]) { alert("Terreno não encontrado no cadastro!"); return; }
-  
-  const dataRocada = prompt("Digite a data da roçada (formato DD/MM/AAAA):", new Date().toLocaleDateString('pt-BR'));
+  if (!terrenoNome || !poligonos[terrenoNome]) return;
+  const dataRocada = prompt("Data (DD/MM/AAAA):", new Date().toLocaleDateString('pt-BR'));
   if (!dataRocada) return;
-  
-  const observacoes = prompt("Observações (opcional):", "") || "";
-  
-  rocadasData.push({ 
-    terreno: terrenoNome, 
-    data: dataRocada, 
-    observacoes, 
-    id: Date.now() 
-  });
-  
-  await salvarRocadasCompleto(rocadasData);
+  const observacoes = prompt("Observações:", "") || "";
+  rocadasData.push({ terreno: terrenoNome, data: dataRocada, observacoes, id: Date.now() });
+  salvarRocadasLocal();
   processarStatus();
-  if (Object.keys(poligonos).length) desenharTerrenos();
-  atualizarStatsUI();
-  updateSyncUI(firebaseConnected, 'Sincronizado');
-  alert("✅ Roçada registrada com sucesso!");
+  desenharTerrenos();
+  alert("✅ Roçada registrada!");
 }
 
-function selecionarTerrenoParaRelatorio() {
-  const terrenos = Object.keys(poligonos);
-  if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
-  const terrenoNome = prompt("Digite o nome do terreno para ver o histórico:", terrenos[0]);
-  if (!terrenoNome) return;
-  if (!poligonos[terrenoNome]) { alert("Terreno não encontrado!"); return; }
-  mostrarHistorico(terrenoNome);
+function abrirModalRelatorio(terreno) {
+  currentSelectedTerreno = terreno;
+  currentTerrenoInfo = poligonos[terreno];
+  
+  document.getElementById('fotoAntes1').value = '';
+  document.getElementById('fotoAntes2').value = '';
+  document.getElementById('fotoDepois1').value = '';
+  document.getElementById('fotoDepois2').value = '';
+  document.getElementById('previewAntes1').style.display = 'none';
+  document.getElementById('previewAntes2').style.display = 'none';
+  document.getElementById('previewDepois1').style.display = 'none';
+  document.getElementById('previewDepois2').style.display = 'none';
+  
+  reportModal.classList.add('show');
+  if (isMobile) closeSidebar();
 }
 
-function selecionarTerrenoParaInfo() {
-  const terrenos = Object.keys(poligonos);
-  if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
-  const terrenoNome = prompt("Digite o nome do terreno para ver informações:", terrenos[0]);
-  if (!terrenoNome) return;
-  if (!poligonos[terrenoNome]) { alert("Terreno não encontrado!"); return; }
-  mostrarInformacoes(terrenoNome);
+// Previews
+document.getElementById('fotoAntes1').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) { const reader = new FileReader(); reader.onload = (event) => { const preview = document.getElementById('previewAntes1'); preview.src = event.target.result; preview.style.display = 'block'; }; reader.readAsDataURL(file); }
+});
+document.getElementById('fotoAntes2').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) { const reader = new FileReader(); reader.onload = (event) => { const preview = document.getElementById('previewAntes2'); preview.src = event.target.result; preview.style.display = 'block'; }; reader.readAsDataURL(file); }
+});
+document.getElementById('fotoDepois1').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) { const reader = new FileReader(); reader.onload = (event) => { const preview = document.getElementById('previewDepois1'); preview.src = event.target.result; preview.style.display = 'block'; }; reader.readAsDataURL(file); }
+});
+document.getElementById('fotoDepois2').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) { const reader = new FileReader(); reader.onload = (event) => { const preview = document.getElementById('previewDepois2'); preview.src = event.target.result; preview.style.display = 'block'; }; reader.readAsDataURL(file); }
+});
+
+async function captureMapImage() {
+  const mapContainer = document.getElementById('map');
+  try {
+    const canvas = await html2canvas(mapContainer, { scale: 2, backgroundColor: '#1a1a2e', useCORS: true });
+    return canvas.toDataURL('image/png');
+  } catch(e) { return null; }
+}
+
+document.getElementById('btnGerarRelatorioCompleto').addEventListener('click', async function() {
+  if (!currentSelectedTerreno || !currentTerrenoInfo) { alert('Selecione um terreno primeiro'); return; }
+  
+  showLoading(true);
+  
+  const fotoAntes1File = document.getElementById('fotoAntes1').files[0];
+  const fotoAntes2File = document.getElementById('fotoAntes2').files[0];
+  const fotoDepois1File = document.getElementById('fotoDepois1').files[0];
+  const fotoDepois2File = document.getElementById('fotoDepois2').files[0];
+  
+  let fotoAntes1Data = null, fotoAntes2Data = null, fotoDepois1Data = null, fotoDepois2Data = null;
+  
+  if (fotoAntes1File) fotoAntes1Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(fotoAntes1File); });
+  if (fotoAntes2File) fotoAntes2Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(fotoAntes2File); });
+  if (fotoDepois1File) fotoDepois1Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(fotoDepois1File); });
+  if (fotoDepois2File) fotoDepois2Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(fotoDepois2File); });
+  
+  const mapImage = await captureMapImage();
+  const info = currentTerrenoInfo;
+  const centro = calcularCentro(info.pontos);
+  const areaFormatada = formatArea(info.areaM2);
+  const dataAtual = new Date().toLocaleDateString('pt-BR');
+  
+  const reportHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Relatório de Roçada - ${currentSelectedTerreno}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', Arial, sans-serif; background: #fff; padding: 40px; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; }
+        .page { page-break-after: always; margin-bottom: 40px; }
+        .page:last-child { page-break-after: auto; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2e7d32; padding-bottom: 20px; }
+        .header h1 { color: #2e7d32; font-size: 28px; margin-bottom: 5px; }
+        .header p { color: #666; font-size: 14px; }
+        .info-section { background: #f5f5f5; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .info-row { display: flex; margin-bottom: 12px; flex-wrap: wrap; }
+        .info-label { width: 130px; font-weight: 600; color: #2e7d32; }
+        .info-value { flex: 1; color: #333; }
+        .map-section { margin-bottom: 25px; }
+        .map-section h3 { color: #2e7d32; margin-bottom: 15px; border-left: 4px solid #2e7d32; padding-left: 12px; }
+        .map-image { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; text-align: center; background: #f9f9f9; padding: 10px; }
+        .map-image img { max-width: 100%; height: auto; border-radius: 4px; }
+        .photos-section { margin-bottom: 25px; }
+        .photos-section h3 { color: #2e7d32; margin-bottom: 15px; border-left: 4px solid #2e7d32; padding-left: 12px; }
+        .photos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .photo-card { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .photo-card .title { background: #f0f0f0; padding: 10px; text-align: center; font-weight: 600; color: #333; }
+        .photo-card .image { padding: 15px; text-align: center; background: #fafafa; min-height: 200px; display: flex; align-items: center; justify-content: center; }
+        .photo-card .image img { max-width: 100%; max-height: 200px; border-radius: 4px; }
+        .signatures { display: flex; gap: 40px; justify-content: center; margin-top: 40px; flex-wrap: wrap; }
+        .signature-box { text-align: center; width: 250px; }
+        .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 10px; }
+        .signature-name { font-weight: 600; margin-top: 5px; }
+        .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #999; }
+        @media print {
+          body { padding: 20px; }
+          .page { page-break-after: always; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <!-- PÁGINA 1 - INFORMAÇÕES E MAPA -->
+        <div class="page">
+          <div class="header">
+            <h1>🌿 Relatório de Roçada</h1>
+            <p>Documento de serviço realizado</p>
+          </div>
+          
+          <div class="info-section">
+            <div class="info-row"><div class="info-label">Proprietário:</div><div class="info-value">${info.proprietario || 'Não informado'}</div></div>
+            <div class="info-row"><div class="info-label">Terreno:</div><div class="info-value">${currentSelectedTerreno}</div></div>
+            <div class="info-row"><div class="info-label">Número:</div><div class="info-value">${info.numero || 'Não informado'}</div></div>
+            <div class="info-row"><div class="info-label">Localização:</div><div class="info-value">Lat: ${centro[0].toFixed(6)}°, Lng: ${centro[1].toFixed(6)}°</div></div>
+            <div class="info-row"><div class="info-label">Área:</div><div class="info-value">${areaFormatada || 'Não informada'}</div></div>
+            <div class="info-row"><div class="info-label">Data da Roçada:</div><div class="info-value">${dataAtual}</div></div>
+          </div>
+          
+          <div class="map-section">
+            <h3>📍 Localização do Terreno</h3>
+            <div class="map-image">${mapImage ? `<img src="${mapImage}" alt="Localização do terreno">` : '<p>Imagem do mapa não disponível</p>'}</div>
+          </div>
+        </div>
+        
+        <!-- PÁGINA 2 - FOTOS E ASSINATURAS -->
+        <div class="page">
+          <div class="photos-section">
+            <h3>📸 Registro Fotográfico</h3>
+            <div class="photos-grid">
+              <div class="photo-card"><div class="title">ANTES 1</div><div class="image">${fotoAntes1Data ? `<img src="${fotoAntes1Data}" alt="Antes 1">` : '<p style="color:#999;">Nenhuma foto</p>'}</div></div>
+              <div class="photo-card"><div class="title">ANTES 2</div><div class="image">${fotoAntes2Data ? `<img src="${fotoAntes2Data}" alt="Antes 2">` : '<p style="color:#999;">Nenhuma foto</p>'}</div></div>
+              <div class="photo-card"><div class="title">DEPOIS 1</div><div class="image">${fotoDepois1Data ? `<img src="${fotoDepois1Data}" alt="Depois 1">` : '<p style="color:#999;">Nenhuma foto</p>'}</div></div>
+              <div class="photo-card"><div class="title">DEPOIS 2</div><div class="image">${fotoDepois2Data ? `<img src="${fotoDepois2Data}" alt="Depois 2">` : '<p style="color:#999;">Nenhuma foto</p>'}</div></div>
+            </div>
+          </div>
+          
+          <div class="signatures">
+            <div class="signature-box">
+              <div class="signature-line"></div>
+              <div class="signature-name">${info.proprietario || 'Proprietário'}</div>
+              <p>Proprietário</p>
+            </div>
+            <div class="signature-box">
+              <div class="signature-line"></div>
+              <div class="signature-name">Khayan Almeida</div>
+              <p>Supervisor</p>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p>Documento gerado pelo sistema Alfa em ${new Date().toLocaleString('pt-BR')}</p>
+          </div>
+        </div>
+      </div>
+      <div class="no-print" style="text-align: center; margin-top: 20px;">
+        <button onclick="window.print()" style="background: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">🖨️ Imprimir / Salvar PDF</button>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  showLoading(false);
+  const win = window.open('', '_blank');
+  win.document.write(reportHtml);
+  win.document.close();
+});
+
+function mostrarInformacoes(terreno) {
+  const info = poligonos[terreno];
+  if (!info) return;
+  currentInfoCenter = calcularCentro(info.pontos);
+  const areaFormatada = formatArea(info.areaM2);
+  const statusInfo = statusTerrenos.get(terreno) || {};
+  infoContent.innerHTML = `
+    <div class="info-field"><label>🏷️ Nome</label><div class="value">${terreno}</div></div>
+    <div class="info-field"><label>👤 Proprietário</label><div class="value">${info.proprietario || 'Não informado'}</div></div>
+    <div class="info-field"><label>🔢 Número</label><div class="value">${info.numero || 'Não informado'}</div></div>
+    <div class="info-divider"></div>
+    <div class="info-field"><label>📐 Área</label><div class="value">${areaFormatada || 'Não informada'}</div></div>
+    <div class="info-field"><label>📅 Última Roçada</label><div class="value">${statusInfo.dataUltima || 'Nunca'}</div></div>
+    <div class="info-field"><label>📊 Status</label><div class="value" style="color: ${statusInfo.cor || '#fff'}">${statusInfo.texto || 'Sem informação'}</div></div>
+  `;
+  infoModal.classList.add('show');
 }
 
 function fecharRelatorio() { reportModal.classList.remove('show'); }
 function fecharInfo() { infoModal.classList.remove('show'); }
-
 function showLoading(show) {
   let el = document.querySelector('.loading-global');
   if (show && !el) {
@@ -1288,10 +997,7 @@ const sidebar = document.getElementById('sidebar');
 const sidebarToggleBtn = document.getElementById('sidebarToggle');
 const sidebarOverlayDiv = document.getElementById('sidebarOverlay');
 let isMobile = window.innerWidth <= 768;
-function checkMobile() {
-  isMobile = window.innerWidth <= 768;
-  if (!isMobile) { sidebar.classList.remove('open'); sidebarOverlayDiv.classList.add('hidden'); }
-}
+function checkMobile() { isMobile = window.innerWidth <= 768; if (!isMobile) { sidebar.classList.remove('open'); sidebarOverlayDiv.classList.add('hidden'); } }
 function openSidebar() { if (isMobile) { sidebar.classList.add('open'); sidebarOverlayDiv.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
 function closeSidebar() { if (isMobile) { sidebar.classList.remove('open'); sidebarOverlayDiv.classList.add('hidden'); document.body.style.overflow = ''; } }
 sidebarToggleBtn.addEventListener('click', () => { if (sidebar.classList.contains('open')) closeSidebar(); else openSidebar(); });
@@ -1302,19 +1008,29 @@ checkMobile();
 // Eventos
 setupInput("geoDrop", "geoInput", loadPoligonos);
 document.getElementById("btnNovaRocada").addEventListener("click", novaRocadaManual);
-document.getElementById("btnGerarRelatorio").addEventListener("click", selecionarTerrenoParaRelatorio);
-document.getElementById("btnInfoTerreno").addEventListener("click", selecionarTerrenoParaInfo);
+document.getElementById("btnGerarRelatorio").addEventListener("click", () => {
+  const terrenos = Object.keys(poligonos);
+  if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
+  const terrenoNome = prompt("Digite o nome do terreno:", terrenos[0]);
+  if (!terrenoNome || !poligonos[terrenoNome]) return;
+  abrirModalRelatorio(terrenoNome);
+});
+document.getElementById("btnInfoTerreno").addEventListener("click", () => {
+  const terrenos = Object.keys(poligonos);
+  if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
+  const terrenoNome = prompt("Digite o nome do terreno:", terrenos[0]);
+  if (!terrenoNome || !poligonos[terrenoNome]) return;
+  mostrarInformacoes(terrenoNome);
+});
 closeReportBtn.addEventListener("click", fecharRelatorio);
 closeInfoBtn.addEventListener("click", fecharInfo);
-btnPrintReport.addEventListener("click", imprimirRelatorio);
-btnOpenRoute.addEventListener("click", abrirRotaGoogleMaps);
-
-// Inicializar
-openLocalDB().then(() => {
-  carregarDadosCompletos();
+btnOpenRoute.addEventListener("click", () => {
+  if (currentInfoCenter) window.open(`https://www.google.com/maps/dir/?api=1&destination=${currentInfoCenter[0]},${currentInfoCenter[1]}`, '_blank');
+  else alert('Selecione um terreno primeiro');
 });
 
-console.log("✅ Sistema Alfa com Firebase inicializado!");
+carregarDadosSalvos();
+console.log("✅ Sistema Alfa - Relatório com 2 páginas, 4 fotos e assinaturas!");
 </script>
 </body>
 </html>
