@@ -427,7 +427,8 @@ body {
     </div>
     <input type="file" id="geoInput" accept=".xlsx, .xls, .csv" style="display: none;">
     <div id="geoFileInfo" class="file-info"></div>
-    <div class="info-marker">Colunas: Terreno, Ponto, Latitude, Longitude, m², Proprietário, Número</div>
+    <div class="info-marker">📌 Colunas: Terreno, Ponto, Latitude, Longitude, m², Proprietário, Número</div>
+    <div class="info-marker">🌍 Suporta formatos: 23°36'1.46"S ou -23.6004</div>
   </div>
 
   <button class="btn-registro" id="btnNovaRocada">✂️ Registrar Roçada</button>
@@ -532,6 +533,48 @@ let statusTerrenos = new Map();
 let currentTerreno = null;
 let currentInfoCenter = null;
 
+// ==================== FUNÇÃO PRINCIPAL DE CONVERSÃO ====================
+function converterCoordenada(coord) {
+  if (!coord) return null;
+  
+  let str = String(coord).trim();
+  if (str.toLowerCase().includes('inexistente') || str === '') return null;
+  
+  // Formato DMS: 23°36'1.46"S  ou  48° 0'16.96"O
+  // Aceita espaços opcionais após o símbolo de grau
+  const dmsPattern = /(\d+)°\s*(\d+)'\s*([\d.]+)"\s*([NSWEOnsweO])/i;
+  const match = str.match(dmsPattern);
+  
+  if (match) {
+    let graus = parseFloat(match[1]);
+    let minutos = parseFloat(match[2]);
+    let segundos = parseFloat(match[3]);
+    let direcao = match[4].toUpperCase();
+    
+    // Converter para decimal: graus + minutos/60 + segundos/3600
+    let decimal = graus + (minutos / 60) + (segundos / 3600);
+    
+    // Ajustar sinal para SUL e OESTE
+    if (direcao === 'S' || direcao === 'SOUTH') decimal = -decimal;
+    if (direcao === 'W' || direcao === 'O' || direcao === 'WEST') decimal = -decimal;
+    
+    console.log(`Convertido: ${str} -> ${decimal}`); // Debug
+    return decimal;
+  }
+  
+  // Tentar converter como número decimal (fallback)
+  let temp = str.replace(',', '.').replace(/[^0-9.-]/g, '');
+  let num = parseFloat(temp);
+  
+  if (!isNaN(num) && num !== 0) {
+    console.log(`Convertido decimal: ${str} -> ${num}`);
+    return num;
+  }
+  
+  console.warn(`Não foi possível converter: ${str}`);
+  return null;
+}
+
 // ==================== FUNÇÕES FIREBASE ====================
 async function salvarPoligonosFirebase() {
   if (Object.keys(poligonos).length === 0) return;
@@ -607,13 +650,6 @@ function detectarColunas(row) {
     }
   }
   return colunas;
-}
-
-function converterCoordenada(coord) {
-  if (!coord) return null;
-  let str = String(coord).trim().replace(',', '.');
-  let num = parseFloat(str);
-  return !isNaN(num) && num !== 0 ? num : null;
 }
 
 function parseDateBr(dateStr) {
@@ -777,6 +813,8 @@ async function loadPoligonos(file) {
       }
       
       const pontosPorTerreno = new Map();
+      let linhasProcessadas = 0;
+      let linhasIgnoradas = 0;
       
       for (let row of json) {
         const terreno = row[colunas.terreno];
@@ -787,7 +825,12 @@ async function loadPoligonos(file) {
         const proprietario = colunas.proprietario ? (row[colunas.proprietario] || "") : "";
         const numero = colunas.numero ? (row[colunas.numero] || "") : "";
         
-        if (!terreno || isNaN(pontoNum) || !lat || !lng) continue;
+        if (!terreno || isNaN(pontoNum) || lat === null || lng === null) {
+          linhasIgnoradas++;
+          continue;
+        }
+        
+        linhasProcessadas++;
         
         if (!pontosPorTerreno.has(terreno)) {
           pontosPorTerreno.set(terreno, { pontos: [], area: 0, proprietario: '', numero: '' });
@@ -800,10 +843,12 @@ async function loadPoligonos(file) {
         if (numero && !data.numero) data.numero = numero;
       }
       
+      console.log(`Processados: ${linhasProcessadas}, Ignorados: ${linhasIgnoradas}`);
+      
       const novosPoligonos = {};
       for (let [terreno, data] of pontosPorTerreno.entries()) {
         if (data.pontos.length < 3) {
-          alert(`Terreno "${terreno}" ignorado (menos de 3 pontos)`);
+          console.warn(`Terreno "${terreno}" ignorado (${data.pontos.length} pontos)`);
           continue;
         }
         data.pontos.sort((a,b) => a.pontoNum - b.pontoNum);
@@ -818,12 +863,14 @@ async function loadPoligonos(file) {
       if (Object.keys(novosPoligonos).length === 0) throw new Error("Nenhum polígono válido");
       
       poligonos = novosPoligonos;
-      document.getElementById('geoFileInfo').innerHTML = `📄 ${file.name} (${Object.keys(poligonos).length} terrenos)`;
+      document.getElementById('geoFileInfo').innerHTML = `📄 ${file.name} (${Object.keys(poligonos).length} terrenos, ${linhasIgnoradas} coordenadas ignoradas)`;
       
       processarStatus();
       desenharTerrenos();
       await salvarPoligonosFirebase();
       await salvarRocadasFirebase();
+      
+      alert(`✅ ${Object.keys(poligonos).length} terrenos carregados!\n📍 ${linhasProcessadas} pontos processados\n⚠️ ${linhasIgnoradas} pontos ignorados`);
       
     } catch(err) {
       alert('Erro: ' + err.message);
@@ -1088,7 +1135,7 @@ document.getElementById('btnOpenRoute').addEventListener('click', () => {
 
 // Iniciar
 carregarDadosFirebase();
-console.log("✅ Sistema 100% funcional - PC e Celular!");
+console.log("✅ Sistema 100% funcional - Suporta coordenadas no formato 23°36'1.46\"S");
 </script>
 </body>
 </html>
