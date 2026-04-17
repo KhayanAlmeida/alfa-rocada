@@ -15,54 +15,51 @@
 
 <style>
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', sans-serif;
   background: #0a0a0a;
   height: 100vh;
   overflow: hidden;
+  display: flex;
 }
 
+/* Sidebar */
 #sidebar {
-  width: 340px;
+  width: 320px;
   background: linear-gradient(135deg, #0f2a1f 0%, #1a3a2a 100%);
   color: white;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 15px;
   overflow-y: auto;
-  overflow-x: hidden;
   height: 100vh;
   box-shadow: 2px 0 10px rgba(0,0,0,0.5);
   z-index: 10;
-  flex-shrink: 0;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-toggle {
   display: none;
   position: fixed;
-  top: 16px;
-  left: 16px;
+  top: 15px;
+  left: 15px;
   z-index: 1001;
-  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  background: #2e7d32;
   border: none;
   color: white;
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: 12px;
   cursor: pointer;
   font-size: 24px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  transition: all 0.2s ease;
 }
 
 .sidebar-overlay {
@@ -72,351 +69,344 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0,0,0,0.5);
   z-index: 9;
 }
 
+/* Responsivo */
 @media (max-width: 768px) {
-  body { flex-direction: column; }
   #sidebar {
     position: fixed;
-    top: 0;
     left: 0;
+    top: 0;
     width: 85%;
-    max-width: 300px;
-    height: 100vh;
+    max-width: 280px;
     transform: translateX(-100%);
     z-index: 1000;
-    box-shadow: none;
   }
-  #sidebar.open { transform: translateX(0); box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
-  .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
-  .sidebar-overlay { display: block; }
-  .sidebar-overlay.hidden { display: none; }
-  #map { height: 100vh; width: 100%; }
-  .report-modal, .info-modal { width: 90%; right: 5%; left: 5%; bottom: 80px; }
-  #sidebar { padding: 16px; gap: 12px; }
+  #sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-overlay {
+    display: block;
+  }
+  .sidebar-overlay.hidden {
+    display: none;
+  }
+  .report-modal, .info-modal {
+    width: 95% !important;
+    left: 2.5% !important;
+    right: 2.5% !important;
+    bottom: 10px !important;
+  }
 }
 
+/* Scrollbar */
 #sidebar::-webkit-scrollbar { width: 6px; }
-#sidebar::-webkit-scrollbar-track { background: #1a3a2a; border-radius: 3px; }
+#sidebar::-webkit-scrollbar-track { background: #1a3a2a; }
 #sidebar::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 3px; }
 
-#sidebar h2 {
-  margin: 0 0 5px 0;
-  font-size: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  position: sticky;
-  top: 0;
-  background: linear-gradient(135deg, #0f2a1f 0%, #1a3a2a 100%);
-  padding-bottom: 8px;
-  z-index: 20;
-  letter-spacing: -0.5px;
+/* Botões */
+.btn-registro, .btn-relatorio, .btn-info {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+}
+.btn-registro { background: #2e7d32; }
+.btn-registro:hover { background: #1b5e20; transform: translateY(-2px); }
+.btn-relatorio { background: #1e40af; }
+.btn-relatorio:hover { background: #1e3a8a; transform: translateY(-2px); }
+.btn-info { background: #7c3aed; }
+.btn-info:hover { background: #6d28d9; transform: translateY(-2px); }
+
+.btn-registro:active, .btn-relatorio:active, .btn-info:active {
+  transform: translateY(0);
 }
 
-.subtitle {
-  font-size: 0.7rem;
-  color: #b9f6ca;
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #2e7d32;
-}
-
+/* Drop zone */
 .drop {
   border: 2px dashed #4caf50;
-  background: rgba(76, 175, 80, 0.05);
-  padding: 12px;
+  background: rgba(76, 175, 80, 0.1);
+  padding: 15px;
   text-align: center;
   cursor: pointer;
-  border-radius: 10px;
-  transition: all 0.2s ease;
+  border-radius: 12px;
+  transition: all 0.2s;
   font-weight: 600;
-  font-size: 13px;
-  margin-top: 5px;
 }
-.drop:hover { background: rgba(76, 175, 80, 0.15); border-color: #81c784; transform: translateY(-2px); }
-
-.legend {
-  background: #1e3a2a;
-  border-radius: 10px;
-  padding: 12px;
-  margin-top: 5px;
+.drop:hover {
+  background: rgba(76, 175, 80, 0.2);
+  transform: translateY(-2px);
 }
-.legend h4 { margin: 0 0 8px 0; font-size: 12px; font-weight: 600; }
-.legend-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 11px; }
-.color-box { width: 28px; height: 16px; border-radius: 4px; }
-.color-box.green { background: #22c55e; border: 1px solid #4ade80; }
-.color-box.yellow { background: #eab308; border: 1px solid #facc15; }
-.color-box.red { background: #ef4444; border: 1px solid #f87171; }
-.color-box.gray { background: #6b7280; border: 1px solid #9ca3af; }
 
+/* Stats */
 .stats-card {
   background: #1e3a2a;
-  border-radius: 10px;
-  padding: 10px;
-  margin-top: 5px;
+  border-radius: 12px;
+  padding: 12px;
   display: none;
 }
 .stats-card.show { display: block; }
-.stats-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #81c784; border-bottom: 1px solid #2e7d32; padding-bottom: 4px; }
-.stats-list { max-height: 180px; overflow-y: auto; padding-right: 4px; }
+.stats-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #81c784;
+  border-bottom: 1px solid #2e7d32;
+  padding-bottom: 5px;
+}
+.stats-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
 .stat-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin: 6px 0;
-  font-size: 11px;
-  padding: 5px 8px;
+  padding: 8px;
+  margin: 5px 0;
   background: #2a4a3a;
-  border-radius: 6px;
-  transition: all 0.1s;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s;
 }
-.stat-item:hover { background: #3a5a4a; transform: translateX(2px); }
-.stat-label { color: #ddd; font-weight: 500; font-size: 11px; word-break: break-word; flex: 1; }
-.stat-value { font-weight: 700; font-size: 11px; margin-left: 8px; }
+.stat-item:hover {
+  background: #3a5a4a;
+  transform: translateX(5px);
+}
+.stat-label { font-size: 12px; }
+.stat-value { font-size: 12px; font-weight: 700; }
 .stat-value.green { color: #4ade80; }
 .stat-value.yellow { color: #facc15; }
 .stat-value.red { color: #f87171; }
 .stat-value.gray { color: #9ca3af; }
 
-.file-info { font-size: 9px; color: #81c784; margin-top: 3px; padding-left: 6px; }
-.separator { height: 1px; background: linear-gradient(90deg, transparent, #2e7d32, transparent); margin: 8px 0; }
+/* Legend */
+.legend {
+  background: #1e3a2a;
+  border-radius: 12px;
+  padding: 12px;
+}
+.legend h4 { font-size: 12px; margin-bottom: 8px; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  font-size: 11px;
+}
+.color-box {
+  width: 25px;
+  height: 14px;
+  border-radius: 3px;
+}
+.color-box.green { background: #22c55e; }
+.color-box.yellow { background: #eab308; }
+.color-box.red { background: #ef4444; }
+.color-box.gray { background: #6b7280; }
 
+/* Mapa */
+#map {
+  flex: 1;
+  height: 100vh;
+  z-index: 1;
+  background: #1a1a2e;
+}
+
+/* Modais */
 .report-modal, .info-modal {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 20px;
+  right: 20px;
   width: 500px;
   max-height: 85vh;
   background: #1e3a2a;
-  border-radius: 14px;
+  border-radius: 16px;
   border-left: 4px solid #4caf50;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   z-index: 1000;
   display: none;
   flex-direction: column;
   overflow: hidden;
-  animation: slideIn 0.25s ease-out;
+  animation: slideIn 0.3s ease;
 }
+
 .info-modal { border-left-color: #3b82f6; }
+
 @keyframes slideIn {
   from { opacity: 0; transform: translateX(50px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
 .report-modal.show, .info-modal.show { display: flex; }
+
 .report-header, .info-header {
   background: #0f2a1f;
-  padding: 12px 16px;
+  padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #2e7d32;
 }
-.info-header { border-bottom-color: #3b82f6; }
-.report-header h3, .info-header h3 { font-size: 14px; font-weight: 700; color: #81c784; margin: 0; }
-.info-header h3 { color: #60a5fa; }
-.close-report, .close-info { background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer; padding: 0 6px; transition: color 0.2s; }
-.close-report:hover, .close-info:hover { color: #ff4444; }
-.report-content, .info-content { padding: 16px; overflow-y: auto; max-height: 65vh; }
-.report-empty, .info-empty { text-align: center; color: #aaa; padding: 20px; font-size: 12px; }
 
-#map { 
-  flex: 1; 
-  height: 100vh; 
-  width: 100%;
-  position: relative; 
-  z-index: 1; 
-  background-color: #1a1a2e;
-}
-
-.custom-tooltip {
-  background: rgba(0, 0, 0, 0.9);
-  border-radius: 8px;
-  color: white;
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  padding: 8px 12px;
-  border-left: 3px solid #4caf50;
-}
-
-.terreno-label {
-  background: transparent;
-  border: none;
-}
-.terreno-label div {
-  background: linear-gradient(135deg, #1a3a2a 0%, #0f2a1f 100%);
-  backdrop-filter: blur(8px);
-  padding: 6px 14px;
-  border-radius: 25px;
-  font-size: 12px;
+.report-header h3, .info-header h3 {
+  font-size: 16px;
   font-weight: 700;
-  border: 1.5px solid #4caf50;
-  white-space: nowrap;
+  color: #81c784;
+}
+
+.close-report, .close-info {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: color 0.2s;
+}
+
+.close-report:hover, .close-info:hover { color: #ff4444; }
+
+.report-content, .info-content {
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+/* Upload de fotos */
+.photo-upload {
+  margin: 15px 0;
+  padding: 12px;
+  background: #2a4a3a;
+  border-radius: 10px;
+}
+.photo-upload label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #81c784;
+}
+.photo-upload input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #4caf50;
+  background: #1e3a2a;
   color: white;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  text-shadow: 0 0 2px rgba(0,0,0,0.5);
-  text-align: center;
-  line-height: 1.3;
 }
-.terreno-label div small {
-  font-size: 10px;
-  font-weight: 500;
-  opacity: 0.9;
-  display: block;
-  margin-top: 2px;
-}
-.terreno-label div:hover {
-  background: #2e7d32;
-  transform: scale(1.02);
+.photo-preview {
+  margin-top: 10px;
+  max-width: 100%;
+  max-height: 100px;
+  border-radius: 8px;
+  display: none;
 }
 
+/* Info fields */
+.info-field {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #2a4a3a;
+  border-radius: 8px;
+}
+.info-field label {
+  font-size: 11px;
+  color: #81c784;
+  display: block;
+  margin-bottom: 5px;
+}
+.info-field .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+.info-divider {
+  height: 1px;
+  background: #3a5a4a;
+  margin: 12px 0;
+}
+
+/* Loading */
 .loading-global {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 10000;
-  background: rgba(0,0,0,0.85);
-  padding: 16px;
+  background: rgba(0,0,0,0.9);
+  padding: 20px 30px;
   border-radius: 12px;
   color: white;
-  font-size: 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  z-index: 10000;
+  font-size: 14px;
 }
-
 .loading {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #fff;
+  width: 20px;
+  height: 20px;
+  border: 2px solid white;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Tooltip mapa */
+.custom-tooltip {
+  background: rgba(0,0,0,0.9);
+  border-radius: 8px;
+  color: white;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-left: 3px solid #4caf50;
+}
+
+.terreno-label div {
+  background: linear-gradient(135deg, #1a3a2a, #0f2a1f);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1.5px solid #4caf50;
+  color: white;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .storage-status {
-  background: rgba(46, 125, 50, 0.2);
-  border-radius: 6px;
-  padding: 6px;
-  font-size: 9px;
+  background: rgba(46,125,50,0.2);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 11px;
   text-align: center;
-  margin-top: 6px;
 }
-.storage-status.online { color: #4ade80; }
-.storage-status.offline { color: #f87171; }
 
-.btn-registro {
-  background: #2e7d32;
-  border: none;
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 6px;
-  width: 100%;
-  transition: all 0.2s;
+.file-info {
+  font-size: 11px;
+  color: #81c784;
+  margin-top: 8px;
+  text-align: center;
 }
-.btn-registro:hover { background: #1b5e20; transform: translateY(-1px); }
-
-.btn-relatorio {
-  background: #1e40af;
-  border: none;
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 6px;
-  width: 100%;
-  transition: all 0.2s;
-}
-.btn-relatorio:hover { background: #1e3a8a; transform: translateY(-1px); }
-
-.btn-info {
-  background: #7c3aed;
-  border: none;
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 6px;
-  width: 100%;
-  transition: all 0.2s;
-}
-.btn-info:hover { background: #6d28d9; transform: translateY(-1px); }
 
 .info-marker {
-  font-size: 9px;
-  color: #b9f6ca;
-  margin-top: 3px;
-}
-
-.photo-upload {
-  margin: 15px 0;
-  padding: 10px;
-  background: #2a4a3a;
-  border-radius: 8px;
-}
-.photo-upload label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #81c784;
-}
-.photo-upload input {
-  display: block;
-  width: 100%;
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #4caf50;
-  background: #1e3a2a;
-  color: white;
-  font-size: 11px;
-  cursor: pointer;
-}
-.photo-preview {
-  margin-top: 8px;
-  max-width: 100%;
-  max-height: 100px;
-  border-radius: 6px;
-  display: none;
-}
-
-.info-field {
-  margin-bottom: 12px;
-  padding: 8px;
-  background: #2a4a3a;
-  border-radius: 6px;
-}
-.info-field label {
-  display: block;
   font-size: 10px;
-  color: #81c784;
-  margin-bottom: 4px;
-}
-.info-field .value {
-  font-size: 13px;
-  font-weight: 600;
-  color: #fff;
-}
-.info-divider {
-  height: 1px;
-  background: #3a5a4a;
-  margin: 12px 0;
+  color: #b9f6ca;
+  margin-top: 5px;
+  text-align: center;
 }
 </style>
 </head>
@@ -427,30 +417,28 @@ body {
 
 <div id="sidebar">
   <div>
-    <h2>⚡ Alfa</h2>
-    <div class="subtitle">Controle de perímetro de terrenos</div>
+    <h2 style="font-size: 24px; margin-bottom: 5px;">⚡ Alfa</h2>
+    <div style="font-size: 12px; color: #b9f6ca;">Controle de terrenos</div>
   </div>
 
   <div>
     <div class="drop" id="geoDrop">
-      📂 Carregar Planilha (Excel/Google Sheets)
-      <div style="font-size: 10px; margin-top: 5px;">✅ Excel (.xlsx, .xls) | ✅ Google Drive</div>
+      📂 Carregar Planilha
     </div>
-    <input type="file" id="geoInput" accept=".xlsx, .xls, .csv, .xlsm, .xltx, .xltm">
-    <div class="info-marker">📌 Colunas: Terreno, Ponto, Latitude, Longitude, m², Proprietário, Número</div>
+    <input type="file" id="geoInput" accept=".xlsx, .xls, .csv" style="display: none;">
     <div id="geoFileInfo" class="file-info"></div>
+    <div class="info-marker">Colunas: Terreno, Ponto, Latitude, Longitude, m², Proprietário, Número</div>
   </div>
 
-  <button class="btn-registro" id="btnNovaRocada">✂️ Registrar nova roçada</button>
-  <button class="btn-relatorio" id="btnGerarRelatorio">📊 Gerar relatório do terreno</button>
-  <button class="btn-info" id="btnInfoTerreno">ℹ️ Informações do terreno</button>
+  <button class="btn-registro" id="btnNovaRocada">✂️ Registrar Roçada</button>
+  <button class="btn-relatorio" id="btnGerarRelatorio">📊 Gerar Relatório</button>
+  <button class="btn-info" id="btnInfoTerreno">ℹ️ Informações</button>
 
   <div class="stats-card" id="statsCard">
     <div class="stats-title">📊 Status dos Terrenos</div>
     <div id="statsList" class="stats-list">
-      <div style="text-align: center; color: #888; padding: 10px;">Carregue os dados</div>
+      <div style="text-align: center; padding: 20px;">Nenhum terreno</div>
     </div>
-    <div class="stat-detail" style="font-size: 9px; margin-top: 6px;">✅ ≤14d | 🟡 15-20d | 🔴 ≥21d</div>
   </div>
 
   <div class="legend">
@@ -461,54 +449,53 @@ body {
     <div class="legend-item"><div class="color-box gray"></div><span>Sem informação</span></div>
   </div>
 
-  <div class="separator"></div>
-  <div class="storage-status" id="storageStatus">☁️ Firebase: Conectando...</div>
+  <div class="storage-status" id="storageStatus">☁️ Firebase: Conectado</div>
 </div>
 
 <div id="map"></div>
 
+<!-- Modal Relatório -->
 <div id="reportModal" class="report-modal">
   <div class="report-header">
-    <h3>📋 Gerar Relatório de Roçada</h3>
+    <h3>📋 Gerar Relatório</h3>
     <button class="close-report" id="closeReportBtn">✕</button>
   </div>
-  <div id="reportContent" class="report-content">
-    <div style="padding: 10px;">
-      <div class="photo-upload">
-        <label>📸 Foto ANTES 1:</label>
-        <input type="file" id="fotoAntes1" accept="image/*">
-        <img id="previewAntes1" class="photo-preview">
-      </div>
-      <div class="photo-upload">
-        <label>📸 Foto ANTES 2:</label>
-        <input type="file" id="fotoAntes2" accept="image/*">
-        <img id="previewAntes2" class="photo-preview">
-      </div>
-      <div class="photo-upload">
-        <label>📸 Foto DEPOIS 1:</label>
-        <input type="file" id="fotoDepois1" accept="image/*">
-        <img id="previewDepois1" class="photo-preview">
-      </div>
-      <div class="photo-upload">
-        <label>📸 Foto DEPOIS 2:</label>
-        <input type="file" id="fotoDepois2" accept="image/*">
-        <img id="previewDepois2" class="photo-preview">
-      </div>
-      <button id="btnGerarRelatorioCompleto" style="background: #2e7d32; border: none; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; width: 100%; margin-top: 10px;">📄 Gerar Relatório Completo</button>
+  <div class="report-content">
+    <div class="photo-upload">
+      <label>📸 Foto ANTES 1:</label>
+      <input type="file" id="fotoAntes1" accept="image/*">
+      <img id="previewAntes1" class="photo-preview">
     </div>
+    <div class="photo-upload">
+      <label>📸 Foto ANTES 2:</label>
+      <input type="file" id="fotoAntes2" accept="image/*">
+      <img id="previewAntes2" class="photo-preview">
+    </div>
+    <div class="photo-upload">
+      <label>📸 Foto DEPOIS 1:</label>
+      <input type="file" id="fotoDepois1" accept="image/*">
+      <img id="previewDepois1" class="photo-preview">
+    </div>
+    <div class="photo-upload">
+      <label>📸 Foto DEPOIS 2:</label>
+      <input type="file" id="fotoDepois2" accept="image/*">
+      <img id="previewDepois2" class="photo-preview">
+    </div>
+    <button id="btnGerarRelatorioCompleto" style="width: 100%; padding: 12px; background: #2e7d32; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px;">📄 Gerar Relatório Completo</button>
   </div>
 </div>
 
+<!-- Modal Info -->
 <div id="infoModal" class="info-modal">
   <div class="info-header">
-    <h3>ℹ️ Informações do Terreno</h3>
+    <h3>ℹ️ Informações</h3>
     <button class="close-info" id="closeInfoBtn">✕</button>
   </div>
-  <div id="infoContent" class="info-content">
-    <div class="info-empty">Selecione um terreno no mapa ou na lista</div>
+  <div class="info-content" id="infoContent">
+    <div style="text-align: center; padding: 20px;">Selecione um terreno</div>
   </div>
-  <div class="info-footer" style="padding: 12px 16px; background: #0f2a1f; border-top: 1px solid #3b82f6;">
-    <button class="btn-route" id="btnOpenRoute">🗺️ Abrir rota no Google Maps</button>
+  <div style="padding: 15px; background: #0f2a1f; border-top: 1px solid #3b82f6;">
+    <button id="btnOpenRoute" style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">🗺️ Abrir rota no Google Maps</button>
   </div>
 </div>
 
@@ -516,195 +503,131 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
-// ==================== CONFIGURAÇÃO DO FIREBASE ====================
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDy3m1AIc00d82qmETM9Ymx5Zk2SCm36AQ",
   authDomain: "alfa-rocagem.firebaseapp.com",
   projectId: "alfa-rocagem",
   storageBucket: "alfa-rocagem.firebasestorage.app",
   messagingSenderId: "179730307608",
-  appId: "1:179730307608:web:0a973138a0b3bc1096016d",
-  measurementId: "G-SZ4WDDLF0B"
+  appId: "1:179730307608:web:0a973138a0b3bc1096016d"
 };
 
-// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// ==================== INICIALIZAR MAPA ====================
+// Inicializar Mapa
 const map = L.map('map').setView([-23.5505, -46.6333], 13);
-L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-  attribution: '&copy; Google Maps',
-  maxZoom: 22,
-  subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+  subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+  attribution: 'Google Maps',
+  maxZoom: 22
 }).addTo(map);
 
-// ==================== VARIÁVEIS GLOBAIS ====================
+// Variáveis Globais
 let poligonos = {};
 let rocadasData = [];
 let mapLayers = new Map();
 let statusTerrenos = new Map();
-let currentSelectedTerreno = null;
-let currentTerrenoInfo = null;
+let currentTerreno = null;
 let currentInfoCenter = null;
 
-// Elementos
-const geoFileInfo = document.getElementById('geoFileInfo');
-const statsListDiv = document.getElementById('statsList');
-const statsCard = document.getElementById('statsCard');
-const reportModal = document.getElementById('reportModal');
-const closeReportBtn = document.getElementById('closeReportBtn');
-const infoModal = document.getElementById('infoModal');
-const infoContent = document.getElementById('infoContent');
-const closeInfoBtn = document.getElementById('closeInfoBtn');
-const btnOpenRoute = document.getElementById('btnOpenRoute');
-const storageStatus = document.getElementById('storageStatus');
-
-// ==================== FUNÇÕES DO FIREBASE (AUTOMÁTICAS) ====================
+// ==================== FUNÇÕES FIREBASE ====================
 async function salvarPoligonosFirebase() {
   if (Object.keys(poligonos).length === 0) return;
   try {
     await database.ref('poligonos').set(poligonos);
-    storageStatus.innerHTML = '☁️ Dados salvos na nuvem';
-    storageStatus.style.color = '#4ade80';
+    document.getElementById('storageStatus').innerHTML = '☁️ Dados salvos!';
     setTimeout(() => {
-      storageStatus.innerHTML = '☁️ Firebase: Sincronizado';
+      document.getElementById('storageStatus').innerHTML = '☁️ Firebase: Conectado';
     }, 2000);
-    return true;
-  } catch (error) {
-    console.error('Erro ao salvar:', error);
-    storageStatus.innerHTML = '☁️ Erro na sincronização';
-    storageStatus.style.color = '#f87171';
-    return false;
-  }
+  } catch(e) { console.error(e); }
 }
 
 async function salvarRocadasFirebase() {
   if (rocadasData.length === 0) return;
   try {
     await database.ref('rocadas').set(rocadasData);
-    return true;
-  } catch (error) {
-    console.error('Erro ao salvar roçadas:', error);
-    return false;
-  }
+  } catch(e) { console.error(e); }
 }
 
-async function carregarPoligonosFirebase() {
+async function carregarDadosFirebase() {
   try {
-    const snapshot = await database.ref('poligonos').once('value');
-    if (snapshot.exists()) {
-      poligonos = snapshot.val();
-      geoFileInfo.innerHTML = `☁️ ${Object.keys(poligonos).length} terrenos carregados`;
-      return true;
+    const poligonosSnap = await database.ref('poligonos').once('value');
+    const rocadasSnap = await database.ref('rocadas').once('value');
+    
+    if (poligonosSnap.exists()) {
+      poligonos = poligonosSnap.val();
+      document.getElementById('geoFileInfo').innerHTML = `☁️ ${Object.keys(poligonos).length} terrenos carregados`;
     }
-    return false;
-  } catch (error) {
-    console.error('Erro ao carregar:', error);
-    return false;
-  }
+    if (rocadasSnap.exists()) rocadasData = rocadasSnap.val();
+    
+    if (Object.keys(poligonos).length > 0) {
+      processarStatus();
+      desenharTerrenos();
+    }
+  } catch(e) { console.error(e); }
 }
 
-async function carregarRocadasFirebase() {
-  try {
-    const snapshot = await database.ref('rocadas').once('value');
-    if (snapshot.exists()) {
-      rocadasData = snapshot.val();
-      return true;
-    }
-    return false;
-  } catch (error) {
-    console.error('Erro ao carregar roçadas:', error);
-    return false;
-  }
-}
-
-// Função para centralizar o mapa em todos os terrenos
+// ==================== FUNÇÕES AUXILIARES ====================
 function centralizarMapa() {
   if (!poligonos || Object.keys(poligonos).length === 0) {
-    // Se não há terrenos, centraliza em São Paulo
     map.setView([-23.5505, -46.6333], 13);
     return;
   }
-  
-  let todasCoordenadas = [];
+  let coords = [];
   for (let terreno in poligonos) {
-    const pontos = poligonos[terreno].pontos;
-    if (pontos && pontos.length > 0) {
-      todasCoordenadas = todasCoordenadas.concat(pontos);
-    }
+    coords = coords.concat(poligonos[terreno].pontos);
   }
-  
-  if (todasCoordenadas.length > 0) {
-    const bounds = L.latLngBounds(todasCoordenadas);
-    map.fitBounds(bounds, { padding: [50, 50] });
-  } else {
-    map.setView([-23.5505, -46.6333], 13);
+  if (coords.length) {
+    map.fitBounds(L.latLngBounds(coords), { padding: [50, 50] });
   }
 }
 
-// ==================== FUNÇÕES DO SISTEMA ====================
 function detectarColunas(row) {
   const colunas = { terreno: null, ponto: null, latitude: null, longitude: null, area: null, proprietario: null, numero: null };
-  const keys = Object.keys(row).map(k => k.toLowerCase().trim());
+  const keys = Object.keys(row).map(k => k.toLowerCase());
   
-  const terrenoPossiveis = ['terreno', 'nome', 'propriedade', 'lote', 'fazenda'];
-  for (let k of keys) if (terrenoPossiveis.some(p => k.includes(p))) { colunas.terreno = Object.keys(row)[keys.indexOf(k)]; break; }
+  const mapColunas = {
+    terreno: ['terreno', 'nome', 'propriedade', 'lote'],
+    ponto: ['ponto', 'pto', 'num', 'ordem'],
+    latitude: ['latitude', 'lat', 'y'],
+    longitude: ['longitude', 'lon', 'lng', 'x'],
+    area: ['m²', 'm2', 'area', 'ha'],
+    proprietario: ['proprietario', 'proprietário', 'dono'],
+    numero: ['numero', 'número', 'registro']
+  };
   
-  const pontoPossiveis = ['ponto', 'pto', 'num', 'ordem'];
-  for (let k of keys) if (pontoPossiveis.some(p => k.includes(p))) { colunas.ponto = Object.keys(row)[keys.indexOf(k)]; break; }
-  
-  const latPossiveis = ['latitude', 'lat', 'y'];
-  for (let k of keys) if (latPossiveis.some(p => k.includes(p))) { colunas.latitude = Object.keys(row)[keys.indexOf(k)]; break; }
-  
-  const lngPossiveis = ['longitude', 'lon', 'lng', 'x'];
-  for (let k of keys) if (lngPossiveis.some(p => k.includes(p))) { colunas.longitude = Object.keys(row)[keys.indexOf(k)]; break; }
-  
-  const areaPossiveis = ['m²', 'm2', 'area', 'ha'];
-  for (let k of keys) if (areaPossiveis.some(p => k === p || k.includes(p))) { colunas.area = Object.keys(row)[keys.indexOf(k)]; break; }
-  
-  const propPossiveis = ['proprietario', 'proprietário', 'dono', 'cliente'];
-  for (let k of keys) if (propPossiveis.some(p => k.includes(p))) { colunas.proprietario = Object.keys(row)[keys.indexOf(k)]; break; }
-  
-  const numPossiveis = ['numero', 'número', 'registro', 'matricula'];
-  for (let k of keys) if (numPossiveis.some(p => k.includes(p))) { colunas.numero = Object.keys(row)[keys.indexOf(k)]; break; }
-  
+  for (let [key, values] of Object.entries(mapColunas)) {
+    for (let k of keys) {
+      if (values.some(v => k.includes(v))) {
+        colunas[key] = Object.keys(row)[keys.indexOf(k)];
+        break;
+      }
+    }
+  }
   return colunas;
 }
 
 function converterCoordenada(coord) {
   if (!coord) return null;
-  let str = String(coord).trim();
-  if (str.toLowerCase().includes('inexistente') || str === '') return null;
-  
-  const dmsPattern = /(\d+)°\s*(\d+)'\s*([\d.]+)"\s*([NSWEOnsweO])/i;
-  const match = str.match(dmsPattern);
-  
-  if (match) {
-    let graus = parseFloat(match[1]), minutos = parseFloat(match[2]), segundos = parseFloat(match[3]), direcao = match[4].toUpperCase();
-    let decimal = graus + (minutos / 60) + (segundos / 3600);
-    if (direcao === 'S' || direcao === 'SOUTH') decimal = -decimal;
-    if (direcao === 'W' || direcao === 'O' || direcao === 'WEST') decimal = -decimal;
-    return decimal;
-  }
-  
-  let temp = str.replace(',', '.').replace(/[^0-9.-]/g, '');
-  let num = parseFloat(temp);
+  let str = String(coord).trim().replace(',', '.');
+  let num = parseFloat(str);
   return !isNaN(num) && num !== 0 ? num : null;
 }
 
 function parseDateBr(dateStr) {
   if (!dateStr) return null;
-  let parts = String(dateStr).trim().split('/');
+  let parts = String(dateStr).split('/');
   if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]);
   let d = new Date(dateStr);
   return isNaN(d.getTime()) ? null : d;
 }
 
-function formatArea(areaM2) {
-  if (!areaM2 || areaM2 === 0) return '';
-  if (areaM2 >= 10000) return `${(areaM2 / 10000).toFixed(2)} ha`;
-  return `${areaM2.toLocaleString('pt-BR')} m²`;
+function formatArea(area) {
+  if (!area || area === 0) return '';
+  if (area >= 10000) return `${(area/10000).toFixed(2)} ha`;
+  return `${area.toLocaleString('pt-BR')} m²`;
 }
 
 function calcularStatus(dias) {
@@ -722,52 +645,66 @@ function processarStatus() {
   for (let r of rocadasData) {
     if (!r.terreno) continue;
     if (!rocadasPorTerreno.has(r.terreno)) rocadasPorTerreno.set(r.terreno, []);
-    const dataObj = parseDateBr(r.data);
-    if (dataObj && !isNaN(dataObj)) {
-      rocadasPorTerreno.get(r.terreno).push({ data: dataObj, dataStr: r.data, observacoes: r.observacoes || "" });
-    }
+    const data = parseDateBr(r.data);
+    if (data) rocadasPorTerreno.get(r.terreno).push({ data, dataStr: r.data });
   }
   
   for (let terreno in poligonos) {
     const rocadas = rocadasPorTerreno.get(terreno) || [];
     if (rocadas.length) {
       rocadas.sort((a,b) => b.data - a.data);
-      const ultima = rocadas[0];
-      const diffDays = Math.floor((hoje - ultima.data) / (1000 * 60 * 60 * 24));
-      const status = calcularStatus(diffDays);
-      statusTerrenos.set(terreno, { dias: diffDays, dataUltima: ultima.dataStr, status: status.status, cor: status.cor, texto: status.texto, areaM2: poligonos[terreno].areaM2 || 0 });
+      const diff = Math.floor((hoje - rocadas[0].data) / (1000*60*60*24));
+      const status = calcularStatus(diff);
+      statusTerrenos.set(terreno, { 
+        dias: diff, 
+        dataUltima: rocadas[0].dataStr, 
+        status: status.status, 
+        cor: status.cor, 
+        texto: status.texto,
+        areaM2: poligonos[terreno].areaM2 || 0
+      });
     } else {
-      statusTerrenos.set(terreno, { dias: null, dataUltima: null, status: "gray", cor: "#6b7280", texto: "Nunca roçado", areaM2: poligonos[terreno].areaM2 || 0 });
+      statusTerrenos.set(terreno, { 
+        dias: null, 
+        dataUltima: null, 
+        status: "gray", 
+        cor: "#6b7280", 
+        texto: "Nunca roçado",
+        areaM2: poligonos[terreno].areaM2 || 0
+      });
     }
   }
 }
 
-function atualizarStatsUI() {
+function atualizarStats() {
   const terrenos = Object.keys(poligonos);
   if (!terrenos.length) {
-    statsListDiv.innerHTML = '<div style="text-align: center; color: #888; padding: 10px;">Nenhum terreno</div>';
-    statsCard.classList.remove('show');
+    document.getElementById('statsList').innerHTML = '<div style="text-align: center; padding: 20px;">Nenhum terreno</div>';
+    document.getElementById('statsCard').classList.remove('show');
     return;
   }
-  statsCard.classList.add('show');
-  const lista = Array.from(statusTerrenos.entries()).sort((a,b) => {
-    const diasA = a[1].dias !== null ? a[1].dias : 999;
-    const diasB = b[1].dias !== null ? b[1].dias : 999;
-    return diasB - diasA;
-  });
-  statsListDiv.innerHTML = lista.map(([nome, info]) => {
-    let diasText = info.dias !== null ? `${info.dias}d` : 'Nunca';
-    let areaText = info.areaM2 ? ` | ${formatArea(info.areaM2)}` : '';
-    return `<div class="stat-item" data-terreno="${nome}"><div class="stat-label">${nome}${areaText}</div><div class="stat-value ${info.status}">${info.texto} (${diasText})</div></div>`;
+  
+  document.getElementById('statsCard').classList.add('show');
+  const lista = Array.from(statusTerrenos.entries()).sort((a,b) => (b[1].dias || 999) - (a[1].dias || 999));
+  
+  document.getElementById('statsList').innerHTML = lista.map(([nome, info]) => {
+    const dias = info.dias !== null ? `${info.dias}d` : 'Nunca';
+    const area = info.areaM2 ? ` ${formatArea(info.areaM2)}` : '';
+    return `
+      <div class="stat-item" data-terreno="${nome}">
+        <div class="stat-label">${nome}${area}</div>
+        <div class="stat-value ${info.status}">${info.texto} (${dias})</div>
+      </div>
+    `;
   }).join('');
   
   document.querySelectorAll('.stat-item').forEach(el => {
-    el.addEventListener('click', () => { const terreno = el.dataset.terreno; if (terreno) abrirModalRelatorio(terreno); });
+    el.addEventListener('click', () => abrirModalRelatorio(el.dataset.terreno));
   });
 }
 
 function limparMapa() {
-  mapLayers.forEach((layer) => { if (layer && map.hasLayer(layer)) map.removeLayer(layer); });
+  mapLayers.forEach(layer => map.removeLayer(layer));
   mapLayers.clear();
 }
 
@@ -775,7 +712,7 @@ function calcularCentro(pontos) {
   if (!pontos.length) return [0,0];
   let lat = 0, lng = 0;
   for (let p of pontos) { lat += p[0]; lng += p[1]; }
-  return [lat / pontos.length, lng / pontos.length];
+  return [lat/pontos.length, lng/pontos.length];
 }
 
 function desenharTerrenos() {
@@ -784,32 +721,45 @@ function desenharTerrenos() {
   
   for (let terreno in poligonos) {
     const pontos = poligonos[terreno].pontos;
-    const areaM2 = poligonos[terreno].areaM2 || 0;
-    if (!pontos.length || pontos.length < 3) continue;
+    if (pontos.length < 3) continue;
     
-    const statusInfo = statusTerrenos.get(terreno) || { cor: "#6b7280", texto: "Sem info", dataUltima: null };
-    const coordsPoligono = [...pontos];
-    coordsPoligono.push(coordsPoligono[0]);
+    const status = statusTerrenos.get(terreno) || { cor: "#6b7280", texto: "Sem info", dataUltima: null };
+    const coords = [...pontos, pontos[0]];
     
-    const polygon = L.polygon(coordsPoligono, { color: statusInfo.cor, weight: 2.5, fillColor: statusInfo.cor, fillOpacity: 0.35, smoothFactor: 1 }).addTo(map);
-    polygon.bindTooltip(`<strong>${terreno}</strong><br>📅 ${statusInfo.dataUltima || 'Nunca'}<br>📌 ${statusInfo.texto}`, { sticky: true, className: 'custom-tooltip' });
+    const polygon = L.polygon(coords, {
+      color: status.cor,
+      weight: 2.5,
+      fillColor: status.cor,
+      fillOpacity: 0.35
+    }).addTo(map);
+    
+    polygon.bindTooltip(`<b>${terreno}</b><br>📅 ${status.dataUltima || 'Nunca'}<br>📌 ${status.texto}`, { 
+      sticky: true, 
+      className: 'custom-tooltip' 
+    });
     polygon.on('click', () => abrirModalRelatorio(terreno));
-    mapLayers.set(`${terreno}_polygon`, polygon);
+    mapLayers.set(`${terreno}_poly`, polygon);
     
     const centro = calcularCentro(pontos);
-    const areaFormatada = formatArea(areaM2);
-    const labelHtml = areaFormatada ? `<div>⚡ ${terreno}<br><small>${areaFormatada}</small></div>` : `<div>⚡ ${terreno}</div>`;
-    const icon = L.divIcon({ className: 'terreno-label', html: labelHtml, iconSize: areaFormatada ? [130, 45] : [100, 32], iconAnchor: areaFormatada ? [65, 22] : [50, 16] });
-    const labelMarker = L.marker(centro, { icon }).addTo(map);
-    labelMarker.on('click', () => abrirModalRelatorio(terreno));
-    mapLayers.set(`${terreno}_label`, labelMarker);
+    const area = formatArea(poligonos[terreno].areaM2);
+    const html = area ? `<div>⚡ ${terreno}<br><small>${area}</small></div>` : `<div>⚡ ${terreno}</div>`;
+    const icon = L.divIcon({ 
+      className: 'terreno-label', 
+      html: html,
+      iconSize: area ? [120, 42] : [90, 30],
+      iconAnchor: area ? [60, 21] : [45, 15]
+    });
+    
+    const marker = L.marker(centro, { icon }).addTo(map);
+    marker.on('click', () => abrirModalRelatorio(terreno));
+    mapLayers.set(`${terreno}_label`, marker);
   }
   
-  // Centralizar o mapa após desenhar todos os terrenos
   centralizarMapa();
-  atualizarStatsUI();
+  atualizarStats();
 }
 
+// ==================== FUNÇÕES PRINCIPAIS ====================
 async function loadPoligonos(file) {
   showLoading(true);
   const reader = new FileReader();
@@ -818,83 +768,94 @@ async function loadPoligonos(file) {
       const data = new Uint8Array(e.target.result);
       const wb = XLSX.read(data, { type: 'array' });
       const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-      if (!json.length) { alert("Planilha vazia!"); showLoading(false); return; }
+      
+      if (!json.length) throw new Error("Planilha vazia!");
       
       const colunas = detectarColunas(json[0]);
       if (!colunas.terreno || !colunas.ponto || !colunas.latitude || !colunas.longitude) {
-        alert("Não foi possível identificar as colunas necessárias (Terreno, Ponto, Latitude, Longitude)");
-        showLoading(false); return;
+        throw new Error("Colunas necessárias não encontradas");
       }
       
       const pontosPorTerreno = new Map();
+      
       for (let row of json) {
         const terreno = row[colunas.terreno];
-        let pontoNum = parseInt(row[colunas.ponto]);
-        let lat = converterCoordenada(row[colunas.latitude]);
-        let lng = converterCoordenada(row[colunas.longitude]);
-        let areaM2 = colunas.area ? parseFloat(String(row[colunas.area] || 0).replace(',', '.')) : 0;
-        let proprietario = colunas.proprietario ? (row[colunas.proprietario] || "") : "";
-        let numero = colunas.numero ? (row[colunas.numero] || "") : "";
+        const pontoNum = parseInt(row[colunas.ponto]);
+        const lat = converterCoordenada(row[colunas.latitude]);
+        const lng = converterCoordenada(row[colunas.longitude]);
+        const area = colunas.area ? parseFloat(String(row[colunas.area] || 0).replace(',', '.')) : 0;
+        const proprietario = colunas.proprietario ? (row[colunas.proprietario] || "") : "";
+        const numero = colunas.numero ? (row[colunas.numero] || "") : "";
         
-        if (!terreno || isNaN(pontoNum) || lat === null || lng === null) continue;
+        if (!terreno || isNaN(pontoNum) || !lat || !lng) continue;
         
-        if (!pontosPorTerreno.has(terreno)) pontosPorTerreno.set(terreno, { pontos: [], areaM2: 0, proprietario: '', numero: '' });
-        const terrData = pontosPorTerreno.get(terreno);
-        terrData.pontos.push({ pontoNum, lat, lng });
-        if (areaM2 > 0 && terrData.areaM2 === 0) terrData.areaM2 = areaM2;
-        if (proprietario && !terrData.proprietario) terrData.proprietario = proprietario;
-        if (numero && !terrData.numero) terrData.numero = numero;
+        if (!pontosPorTerreno.has(terreno)) {
+          pontosPorTerreno.set(terreno, { pontos: [], area: 0, proprietario: '', numero: '' });
+        }
+        
+        const data = pontosPorTerreno.get(terreno);
+        data.pontos.push({ pontoNum, lat, lng });
+        if (area && !data.area) data.area = area;
+        if (proprietario && !data.proprietario) data.proprietario = proprietario;
+        if (numero && !data.numero) data.numero = numero;
       }
       
       const novosPoligonos = {};
-      for (let [terreno, terrData] of pontosPorTerreno.entries()) {
-        if (terrData.pontos.length < 3) { alert(`Terreno "${terreno}" tem apenas ${terrData.pontos.length} pontos - ignorado`); continue; }
-        terrData.pontos.sort((a,b) => a.pontoNum - b.pontoNum);
+      for (let [terreno, data] of pontosPorTerreno.entries()) {
+        if (data.pontos.length < 3) {
+          alert(`Terreno "${terreno}" ignorado (menos de 3 pontos)`);
+          continue;
+        }
+        data.pontos.sort((a,b) => a.pontoNum - b.pontoNum);
         novosPoligonos[terreno] = {
-          pontos: terrData.pontos.map(p => [p.lat, p.lng]),
-          ordem: terrData.pontos.map(p => p.pontoNum),
-          areaM2: terrData.areaM2 || 0,
-          proprietario: terrData.proprietario || '',
-          numero: terrData.numero || ''
+          pontos: data.pontos.map(p => [p.lat, p.lng]),
+          areaM2: data.area || 0,
+          proprietario: data.proprietario || '',
+          numero: data.numero || ''
         };
       }
       
-      if (Object.keys(novosPoligonos).length === 0) { alert("Nenhum polígono válido!"); showLoading(false); return; }
+      if (Object.keys(novosPoligonos).length === 0) throw new Error("Nenhum polígono válido");
       
       poligonos = novosPoligonos;
-      geoFileInfo.innerHTML = `📄 ${file.name} (${Object.keys(poligonos).length} terrenos)`;
+      document.getElementById('geoFileInfo').innerHTML = `📄 ${file.name} (${Object.keys(poligonos).length} terrenos)`;
+      
       processarStatus();
       desenharTerrenos();
-      
-      // Salvar automaticamente no Firebase
       await salvarPoligonosFirebase();
       await salvarRocadasFirebase();
       
-    } catch(err) { alert('Erro: ' + err.message); }
-    finally { showLoading(false); }
+    } catch(err) {
+      alert('Erro: ' + err.message);
+    } finally {
+      showLoading(false);
+    }
   };
   reader.readAsArrayBuffer(file);
 }
 
-async function novaRocadaManual() {
+async function novaRocada() {
   const terrenos = Object.keys(poligonos);
-  if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
-  const terrenoNome = prompt("Digite o nome do terreno:", terrenos[0]);
-  if (!terrenoNome || !poligonos[terrenoNome]) return;
-  const dataRocada = prompt("Data (DD/MM/AAAA):", new Date().toLocaleDateString('pt-BR'));
-  if (!dataRocada) return;
-  const observacoes = prompt("Observações:", "") || "";
-  rocadasData.push({ terreno: terrenoNome, data: dataRocada, observacoes, id: Date.now() });
+  if (!terrenos.length) {
+    alert("Carregue os terrenos primeiro!");
+    return;
+  }
+  
+  const terreno = prompt("Nome do terreno:", terrenos[0]);
+  if (!terreno || !poligonos[terreno]) return;
+  
+  const data = prompt("Data (DD/MM/AAAA):", new Date().toLocaleDateString('pt-BR'));
+  if (!data) return;
+  
+  rocadasData.push({ terreno, data, id: Date.now() });
   await salvarRocadasFirebase();
   processarStatus();
   desenharTerrenos();
-  alert("✅ Roçada registrada e salva!");
+  alert("✅ Roçada registrada!");
 }
 
 function abrirModalRelatorio(terreno) {
-  currentSelectedTerreno = terreno;
-  currentTerrenoInfo = poligonos[terreno];
-  
+  currentTerreno = terreno;
   document.getElementById('fotoAntes1').value = '';
   document.getElementById('fotoAntes2').value = '';
   document.getElementById('fotoDepois1').value = '';
@@ -903,156 +864,141 @@ function abrirModalRelatorio(terreno) {
   document.getElementById('previewAntes2').style.display = 'none';
   document.getElementById('previewDepois1').style.display = 'none';
   document.getElementById('previewDepois2').style.display = 'none';
-  
-  reportModal.classList.add('show');
-  if (isMobile) closeSidebar();
+  document.getElementById('reportModal').classList.add('show');
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
-// Previews
-document.getElementById('fotoAntes1').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) { const reader = new FileReader(); reader.onload = (event) => { const preview = document.getElementById('previewAntes1'); preview.src = event.target.result; preview.style.display = 'block'; }; reader.readAsDataURL(file); }
-});
-document.getElementById('fotoAntes2').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) { const reader = new FileReader(); reader.onload = (event) => { const preview = document.getElementById('previewAntes2'); preview.src = event.target.result; preview.style.display = 'block'; }; reader.readAsDataURL(file); }
-});
-document.getElementById('fotoDepois1').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) { const reader = new FileReader(); reader.onload = (event) => { const preview = document.getElementById('previewDepois1'); preview.src = event.target.result; preview.style.display = 'block'; }; reader.readAsDataURL(file); }
-});
-document.getElementById('fotoDepois2').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) { const reader = new FileReader(); reader.onload = (event) => { const preview = document.getElementById('previewDepois2'); preview.src = event.target.result; preview.style.display = 'block'; }; reader.readAsDataURL(file); }
+// Previews das fotos
+['fotoAntes1', 'fotoAntes2', 'fotoDepois1', 'fotoDepois2'].forEach(id => {
+  document.getElementById(id).addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const preview = document.getElementById(`preview${id.charAt(0).toUpperCase() + id.slice(1)}`);
+        preview.src = event.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 });
 
 async function captureMapImage() {
-  const mapContainer = document.getElementById('map');
   try {
-    const canvas = await html2canvas(mapContainer, { scale: 2, backgroundColor: '#1a1a2e', useCORS: true });
+    const canvas = await html2canvas(document.getElementById('map'), { 
+      scale: 1.5, 
+      backgroundColor: '#1a1a2e',
+      useCORS: true
+    });
     return canvas.toDataURL('image/png');
-  } catch(e) { return null; }
+  } catch(e) {
+    console.error(e);
+    return null;
+  }
 }
 
 document.getElementById('btnGerarRelatorioCompleto').addEventListener('click', async function() {
-  if (!currentSelectedTerreno || !currentTerrenoInfo) { alert('Selecione um terreno primeiro'); return; }
+  if (!currentTerreno || !poligonos[currentTerreno]) {
+    alert('Selecione um terreno primeiro');
+    return;
+  }
   
   showLoading(true);
   
-  const fotoAntes1File = document.getElementById('fotoAntes1').files[0];
-  const fotoAntes2File = document.getElementById('fotoAntes2').files[0];
-  const fotoDepois1File = document.getElementById('fotoDepois1').files[0];
-  const fotoDepois2File = document.getElementById('fotoDepois2').files[0];
-  
-  let fotoAntes1Data = null, fotoAntes2Data = null, fotoDepois1Data = null, fotoDepois2Data = null;
-  
-  if (fotoAntes1File) fotoAntes1Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(fotoAntes1File); });
-  if (fotoAntes2File) fotoAntes2Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(fotoAntes2File); });
-  if (fotoDepois1File) fotoDepois1Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(fotoDepois1File); });
-  if (fotoDepois2File) fotoDepois2Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(fotoDepois2File); });
+  // Capturar fotos
+  const fotos = {};
+  for (let id of ['fotoAntes1', 'fotoAntes2', 'fotoDepois1', 'fotoDepois2']) {
+    const file = document.getElementById(id).files[0];
+    if (file) {
+      fotos[id] = await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
+  }
   
   const mapImage = await captureMapImage();
-  const info = currentTerrenoInfo;
+  const info = poligonos[currentTerreno];
   const centro = calcularCentro(info.pontos);
-  const areaFormatada = formatArea(info.areaM2);
-  const dataAtual = new Date().toLocaleDateString('pt-BR');
+  const area = formatArea(info.areaM2);
+  const data = new Date().toLocaleDateString('pt-BR');
+  const statusInfo = statusTerrenos.get(currentTerreno) || {};
   
-  const reportHtml = `
+  const html = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Relatório de Roçada - ${currentSelectedTerreno}</title>
+      <title>Relatório - ${currentTerreno}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', Arial, sans-serif; background: #fff; padding: 40px; }
-        .container { max-width: 1000px; margin: 0 auto; background: #fff; }
-        .page { page-break-after: always; margin-bottom: 40px; }
-        .page:last-child { page-break-after: auto; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: white; }
+        .container { max-width: 900px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2e7d32; padding-bottom: 20px; }
-        .header h1 { color: #2e7d32; font-size: 28px; margin-bottom: 5px; }
-        .header p { color: #666; font-size: 14px; }
-        .info-section { background: #f5f5f5; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
-        .info-row { display: flex; margin-bottom: 12px; flex-wrap: wrap; }
-        .info-label { width: 130px; font-weight: 600; color: #2e7d32; }
-        .info-value { flex: 1; color: #333; }
-        .map-section { margin-bottom: 25px; }
-        .map-section h3 { color: #2e7d32; margin-bottom: 15px; border-left: 4px solid #2e7d32; padding-left: 12px; }
-        .map-image { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; text-align: center; background: #f9f9f9; padding: 10px; }
-        .map-image img { max-width: 100%; height: auto; border-radius: 4px; }
-        .photos-section { margin-bottom: 25px; }
-        .photos-section h3 { color: #2e7d32; margin-bottom: 15px; border-left: 4px solid #2e7d32; padding-left: 12px; }
-        .photos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .header h1 { color: #2e7d32; }
+        .info { background: #f5f5f5; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .info-row { display: flex; margin-bottom: 10px; }
+        .info-label { width: 120px; font-weight: bold; color: #2e7d32; }
+        .info-value { flex: 1; }
+        .map { text-align: center; margin-bottom: 20px; }
+        .map img { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+        .photos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
         .photo-card { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
-        .photo-card .title { background: #f0f0f0; padding: 10px; text-align: center; font-weight: 600; color: #333; }
-        .photo-card .image { padding: 15px; text-align: center; background: #fafafa; min-height: 200px; display: flex; align-items: center; justify-content: center; }
-        .photo-card .image img { max-width: 100%; max-height: 200px; border-radius: 4px; }
-        .signatures { display: flex; gap: 40px; justify-content: center; margin-top: 40px; flex-wrap: wrap; }
-        .signature-box { text-align: center; width: 250px; }
-        .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 10px; }
-        .signature-name { font-weight: 600; margin-top: 5px; }
-        .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #999; }
+        .photo-title { background: #f0f0f0; padding: 10px; text-align: center; font-weight: bold; }
+        .photo-img { padding: 15px; text-align: center; min-height: 150px; }
+        .photo-img img { max-width: 100%; max-height: 150px; }
+        .signatures { display: flex; gap: 40px; justify-content: center; margin-top: 40px; }
+        .signature { text-align: center; width: 250px; }
+        .signature-line { border-top: 1px solid black; margin-top: 40px; padding-top: 10px; }
+        .footer { text-align: center; font-size: 11px; color: #999; margin-top: 30px; }
         @media print {
-          body { padding: 20px; }
-          .page { page-break-after: always; }
+          body { padding: 10px; }
           .no-print { display: none; }
         }
+        button { background: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 20px; }
       </style>
     </head>
     <body>
       <div class="container">
-        <div class="page">
-          <div class="header">
-            <h1>🌿 Relatório de Roçada</h1>
-            <p>Documento de serviço realizado</p>
-          </div>
-          
-          <div class="info-section">
-            <div class="info-row"><div class="info-label">Proprietário:</div><div class="info-value">${info.proprietario || 'Não informado'}</div></div>
-            <div class="info-row"><div class="info-label">Terreno:</div><div class="info-value">${currentSelectedTerreno}</div></div>
-            <div class="info-row"><div class="info-label">Número:</div><div class="info-value">${info.numero || 'Não informado'}</div></div>
-            <div class="info-row"><div class="info-label">Localização:</div><div class="info-value">Lat: ${centro[0].toFixed(6)}°, Lng: ${centro[1].toFixed(6)}°</div></div>
-            <div class="info-row"><div class="info-label">Área:</div><div class="info-value">${areaFormatada || 'Não informada'}</div></div>
-            <div class="info-row"><div class="info-label">Data da Roçada:</div><div class="info-value">${dataAtual}</div></div>
-          </div>
-          
-          <div class="map-section">
-            <h3>📍 Localização do Terreno</h3>
-            <div class="map-image">${mapImage ? `<img src="${mapImage}" alt="Localização do terreno">` : '<p>Imagem do mapa não disponível</p>'}</div>
-          </div>
+        <div class="header">
+          <h1>🌿 Relatório de Roçada</h1>
+          <p>${data}</p>
         </div>
         
-        <div class="page">
-          <div class="photos-section">
-            <h3>📸 Registro Fotográfico</h3>
-            <div class="photos-grid">
-              <div class="photo-card"><div class="title">ANTES 1</div><div class="image">${fotoAntes1Data ? `<img src="${fotoAntes1Data}" alt="Antes 1">` : '<p style="color:#999;">Nenhuma foto</p>'}</div></div>
-              <div class="photo-card"><div class="title">ANTES 2</div><div class="image">${fotoAntes2Data ? `<img src="${fotoAntes2Data}" alt="Antes 2">` : '<p style="color:#999;">Nenhuma foto</p>'}</div></div>
-              <div class="photo-card"><div class="title">DEPOIS 1</div><div class="image">${fotoDepois1Data ? `<img src="${fotoDepois1Data}" alt="Depois 1">` : '<p style="color:#999;">Nenhuma foto</p>'}</div></div>
-              <div class="photo-card"><div class="title">DEPOIS 2</div><div class="image">${fotoDepois2Data ? `<img src="${fotoDepois2Data}" alt="Depois 2">` : '<p style="color:#999;">Nenhuma foto</p>'}</div></div>
-            </div>
-          </div>
-          
-          <div class="signatures">
-            <div class="signature-box">
-              <div class="signature-line"></div>
-              <div class="signature-name">${info.proprietario || 'Proprietário'}</div>
-              <p>Proprietário</p>
-            </div>
-            <div class="signature-box">
-              <div class="signature-line"></div>
-              <div class="signature-name">Khayan Almeida</div>
-              <p>Supervisor</p>
-            </div>
-          </div>
-          
-          <div class="footer">
-            <p>Documento gerado pelo sistema Alfa em ${new Date().toLocaleString('pt-BR')}</p>
-          </div>
+        <div class="info">
+          <div class="info-row"><div class="info-label">Proprietário:</div><div class="info-value">${info.proprietario || 'Não informado'}</div></div>
+          <div class="info-row"><div class="info-label">Terreno:</div><div class="info-value">${currentTerreno}</div></div>
+          <div class="info-row"><div class="info-label">Número:</div><div class="info-value">${info.numero || 'Não informado'}</div></div>
+          <div class="info-row"><div class="info-label">Área:</div><div class="info-value">${area || 'Não informada'}</div></div>
+          <div class="info-row"><div class="info-label">Status:</div><div class="info-value">${statusInfo.texto || 'Sem informação'}</div></div>
+          <div class="info-row"><div class="info-label">Última Roçada:</div><div class="info-value">${statusInfo.dataUltima || 'Nunca'}</div></div>
+        </div>
+        
+        <div class="map">
+          <h3>📍 Localização</h3>
+          ${mapImage ? `<img src="${mapImage}" alt="Mapa">` : '<p>Mapa indisponível</p>'}
+        </div>
+        
+        <div class="photos">
+          <div class="photo-card"><div class="photo-title">ANTES 1</div><div class="photo-img">${fotos.fotoAntes1 ? `<img src="${fotos.fotoAntes1}">` : '<p>Sem foto</p>'}</div></div>
+          <div class="photo-card"><div class="photo-title">ANTES 2</div><div class="photo-img">${fotos.fotoAntes2 ? `<img src="${fotos.fotoAntes2}">` : '<p>Sem foto</p>'}</div></div>
+          <div class="photo-card"><div class="photo-title">DEPOIS 1</div><div class="photo-img">${fotos.fotoDepois1 ? `<img src="${fotos.fotoDepois1}">` : '<p>Sem foto</p>'}</div></div>
+          <div class="photo-card"><div class="photo-title">DEPOIS 2</div><div class="photo-img">${fotos.fotoDepois2 ? `<img src="${fotos.fotoDepois2}">` : '<p>Sem foto</p>'}</div></div>
+        </div>
+        
+        <div class="signatures">
+          <div class="signature"><div class="signature-line"></div><div>${info.proprietario || 'Proprietário'}</div></div>
+          <div class="signature"><div class="signature-line"></div><div>Khayan Almeida</div><div>Supervisor</div></div>
+        </div>
+        
+        <div class="footer">
+          <p>Documento gerado pelo sistema Alfa</p>
         </div>
       </div>
-      <div class="no-print" style="text-align: center; margin-top: 20px;">
-        <button onclick="window.print()" style="background: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">🖨️ Imprimir / Salvar PDF</button>
+      <div class="no-print" style="text-align: center;">
+        <button onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
       </div>
     </body>
     </html>
@@ -1060,30 +1006,31 @@ document.getElementById('btnGerarRelatorioCompleto').addEventListener('click', a
   
   showLoading(false);
   const win = window.open('', '_blank');
-  win.document.write(reportHtml);
+  win.document.write(html);
   win.document.close();
 });
 
-function mostrarInformacoes(terreno) {
+function mostrarInfo(terreno) {
   const info = poligonos[terreno];
   if (!info) return;
+  
   currentInfoCenter = calcularCentro(info.pontos);
-  const areaFormatada = formatArea(info.areaM2);
+  const area = formatArea(info.areaM2);
   const statusInfo = statusTerrenos.get(terreno) || {};
-  infoContent.innerHTML = `
+  
+  document.getElementById('infoContent').innerHTML = `
     <div class="info-field"><label>🏷️ Nome</label><div class="value">${terreno}</div></div>
     <div class="info-field"><label>👤 Proprietário</label><div class="value">${info.proprietario || 'Não informado'}</div></div>
     <div class="info-field"><label>🔢 Número</label><div class="value">${info.numero || 'Não informado'}</div></div>
     <div class="info-divider"></div>
-    <div class="info-field"><label>📐 Área</label><div class="value">${areaFormatada || 'Não informada'}</div></div>
+    <div class="info-field"><label>📐 Área</label><div class="value">${area || 'Não informada'}</div></div>
     <div class="info-field"><label>📅 Última Roçada</label><div class="value">${statusInfo.dataUltima || 'Nunca'}</div></div>
-    <div class="info-field"><label>📊 Status</label><div class="value" style="color: ${statusInfo.cor || '#fff'}">${statusInfo.texto || 'Sem informação'}</div></div>
+    <div class="info-field"><label>📊 Status</label><div class="value" style="color: ${statusInfo.cor || 'white'}">${statusInfo.texto || 'Sem informação'}</div></div>
   `;
-  infoModal.classList.add('show');
+  
+  document.getElementById('infoModal').classList.add('show');
 }
 
-function fecharRelatorio() { reportModal.classList.remove('show'); }
-function fecharInfo() { infoModal.classList.remove('show'); }
 function showLoading(show) {
   let el = document.querySelector('.loading-global');
   if (show && !el) {
@@ -1091,79 +1038,57 @@ function showLoading(show) {
     el.className = 'loading-global';
     el.innerHTML = '<div class="loading"></div><span>Processando...</span>';
     document.body.appendChild(el);
-  } else if (!show && el) el.remove();
+  } else if (!show && el) {
+    el.remove();
+  }
 }
 
-function setupInput(dropId, inputId, callback) {
-  const drop = document.getElementById(dropId), input = document.getElementById(inputId);
-  drop.onclick = () => { input.click(); if (isMobile) closeSidebar(); };
-  input.onchange = e => { if (e.target.files[0]) callback(e.target.files[0]); };
-  drop.ondragover = e => e.preventDefault();
-  drop.ondrop = e => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file) callback(file); };
+// Mobile sidebar
+function closeSidebar() {
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  }
 }
 
-// Mobile
-const sidebar = document.getElementById('sidebar');
-const sidebarToggleBtn = document.getElementById('sidebarToggle');
-const sidebarOverlayDiv = document.getElementById('sidebarOverlay');
-let isMobile = window.innerWidth <= 768;
-function checkMobile() { isMobile = window.innerWidth <= 768; if (!isMobile) { sidebar.classList.remove('open'); sidebarOverlayDiv.classList.add('hidden'); } }
-function openSidebar() { if (isMobile) { sidebar.classList.add('open'); sidebarOverlayDiv.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
-function closeSidebar() { if (isMobile) { sidebar.classList.remove('open'); sidebarOverlayDiv.classList.add('hidden'); document.body.style.overflow = ''; } }
-sidebarToggleBtn.addEventListener('click', () => { if (sidebar.classList.contains('open')) closeSidebar(); else openSidebar(); });
-sidebarOverlayDiv.addEventListener('click', closeSidebar);
-window.addEventListener('resize', checkMobile);
-checkMobile();
+function openSidebar() {
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  }
+}
 
 // Eventos
-setupInput("geoDrop", "geoInput", loadPoligonos);
-document.getElementById("btnNovaRocada").addEventListener("click", novaRocadaManual);
-document.getElementById("btnGerarRelatorio").addEventListener("click", () => {
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  if (document.getElementById('sidebar').classList.contains('open')) closeSidebar();
+  else openSidebar();
+});
+document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+document.getElementById('geoDrop').addEventListener('click', () => document.getElementById('geoInput').click());
+document.getElementById('geoInput').addEventListener('change', e => e.target.files[0] && loadPoligonos(e.target.files[0]));
+document.getElementById('btnNovaRocada').addEventListener('click', novaRocada);
+document.getElementById('btnGerarRelatorio').addEventListener('click', () => {
   const terrenos = Object.keys(poligonos);
   if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
-  const terrenoNome = prompt("Digite o nome do terreno:", terrenos[0]);
-  if (!terrenoNome || !poligonos[terrenoNome]) return;
-  abrirModalRelatorio(terrenoNome);
+  const terreno = prompt("Terreno:", terrenos[0]);
+  if (terreno && poligonos[terreno]) abrirModalRelatorio(terreno);
 });
-document.getElementById("btnInfoTerreno").addEventListener("click", () => {
+document.getElementById('btnInfoTerreno').addEventListener('click', () => {
   const terrenos = Object.keys(poligonos);
   if (!terrenos.length) { alert("Carregue os terrenos primeiro!"); return; }
-  const terrenoNome = prompt("Digite o nome do terreno:", terrenos[0]);
-  if (!terrenoNome || !poligonos[terrenoNome]) return;
-  mostrarInformacoes(terrenoNome);
+  const terreno = prompt("Terreno:", terrenos[0]);
+  if (terreno && poligonos[terreno]) mostrarInfo(terreno);
 });
-closeReportBtn.addEventListener("click", fecharRelatorio);
-closeInfoBtn.addEventListener("click", fecharInfo);
-btnOpenRoute.addEventListener("click", () => {
+document.getElementById('closeReportBtn').addEventListener('click', () => document.getElementById('reportModal').classList.remove('show'));
+document.getElementById('closeInfoBtn').addEventListener('click', () => document.getElementById('infoModal').classList.remove('show'));
+document.getElementById('btnOpenRoute').addEventListener('click', () => {
   if (currentInfoCenter) window.open(`https://www.google.com/maps/dir/?api=1&destination=${currentInfoCenter[0]},${currentInfoCenter[1]}`, '_blank');
-  else alert('Selecione um terreno primeiro');
+  else alert('Selecione um terreno');
 });
 
-// Carregar dados do Firebase ao iniciar
-async function inicializar() {
-  showLoading(true);
-  const poligonosLoaded = await carregarPoligonosFirebase();
-  const rocadasLoaded = await carregarRocadasFirebase();
-  
-  if (poligonosLoaded || rocadasLoaded) {
-    processarStatus();
-    desenharTerrenos();
-    storageStatus.innerHTML = '☁️ Dados carregados da nuvem';
-  } else {
-    storageStatus.innerHTML = '☁️ Firebase: Pronto';
-    // Centralizar mapa em São Paulo como fallback
-    map.setView([-23.5505, -46.6333], 13);
-  }
-  
-  setTimeout(() => {
-    storageStatus.innerHTML = '☁️ Firebase: Sincronizado';
-  }, 2000);
-  showLoading(false);
-}
-
-// Iniciar o sistema
-inicializar();
-console.log("✅ Sistema Alfa com Firebase - Sincronização automática!");
+// Iniciar
+carregarDadosFirebase();
+console.log("✅ Sistema 100% funcional - PC e Celular!");
 </script>
 </body>
 </html>
